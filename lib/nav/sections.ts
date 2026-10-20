@@ -30,9 +30,6 @@ export function inferNavRootSection(pathname: string): NavRootSectionId {
   if (!trackSlug || !isTrackId(trackSlug)) {
     return "conspect";
   }
-  if (trackSlug === "behavior") {
-    return "interviews";
-  }
   if (topicSlug) {
     const topic = getTopic(trackSlug, topicSlug);
     if (topic && isInterviewSectionTopic(topic)) {

@@ -3,6 +3,7 @@ import {
   TRACKS,
   clusterTargetHref,
   getSubject,
+  getTopic,
   hubFileForTrack,
   leafTopicForTrack,
   subjectHref,
@@ -24,6 +25,7 @@ import { withLocale } from "@/lib/i18n/paths";
 import { loadFileOutline, loadTopicOutline } from "@/lib/parse";
 import {
   filterInterviewConcepts,
+  isInterviewSectionTopic,
   isQuestionCluster,
   sameTitle,
   shouldHideSidebarConcepts,
@@ -312,6 +314,10 @@ function stripQuestionEntries(
   const next: NavEntry[] = [];
   for (const entry of entries) {
     if (entry.kind === "topic") {
+      const catalog = getTopic(trackId, entry.topic.slug);
+      if (catalog && isInterviewSectionTopic(catalog)) {
+        continue;
+      }
       next.push(entry);
       continue;
     }
@@ -336,6 +342,13 @@ function interviewOnlyEntries(
   const interview: NavTopic[] = [];
   const tasks: NavTopic[] = [];
   for (const entry of entries) {
+    if (entry.kind === "topic") {
+      const catalog = getTopic(trackId, entry.topic.slug);
+      if (catalog && isInterviewSectionTopic(catalog)) {
+        interview.push(entry.topic);
+      }
+      continue;
+    }
     if (entry.kind !== "subject") {
       continue;
     }
