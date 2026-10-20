@@ -47,7 +47,7 @@ import {
   queueHandbookHref,
 } from "../utils/hash";
 import { useHandbookLocation } from "../hooks/useHandbookLocation";
-import { useMdUp } from "../hooks/useMdUp";
+import { useStackPathPins } from "../hooks/useMdUp";
 import { isActiveHref, isActiveTrack } from "../utils/location";
 import { SearchHitList } from "./SearchHitList";
 import { pinNavElement, pinNavForHref } from "../utils/sidebarPin";
@@ -178,7 +178,7 @@ export const TopicSidebar = memo(function TopicSidebar({
     }),
     [bookmarkKeys],
   );
-  const stackPathPins = useMdUp();
+  const stackPathPins = useStackPathPins();
   const highlightValue = useMemo(
     () => ({ highlightPathname, stackPathPins }),
     [highlightPathname, stackPathPins],
@@ -287,7 +287,7 @@ export const TopicSidebar = memo(function TopicSidebar({
           </SidebarFoldScopeProvider>
         )}
       </nav>
-      <StickyPathStyles revision={stickyRevision} />
+      {stackPathPins ? <StickyPathStyles revision={stickyRevision} /> : null}
     </SidebarNavProvider>
   );
 });

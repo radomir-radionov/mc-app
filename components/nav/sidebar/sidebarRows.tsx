@@ -118,14 +118,13 @@ function conceptRowClass(
   active: boolean,
   indentClass: string,
   rowGapClass: string,
-  onPath: boolean,
 ): string {
   const shared =
     "block min-h-11 w-full touch-manipulation cursor-pointer rounded-md px-2 py-1.5 text-sm font-medium ring-1 ring-inset transition-[color,background-color,box-shadow] duration-150 ease-out motion-reduce:transition-none sm:min-h-8";
   const highlight = active
     ? `${shared} text-zinc-900 bg-yellow-50 ring-yellow-200 dark:bg-yellow-950 dark:text-zinc-50 dark:ring-yellow-800`
     : `${shared} text-zinc-600 bg-transparent ring-transparent hover:bg-yellow-50 dark:text-zinc-400 dark:hover:bg-yellow-950/60`;
-  return `${highlight} ${indentClass}${rowGapClass ? ` ${rowGapClass}` : ""}${onPath ? " sticky" : ""}`;
+  return `${highlight} ${indentClass}${rowGapClass ? ` ${rowGapClass}` : ""}`;
 }
 
 export const ConceptLink = memo(function ConceptLink({
@@ -170,12 +169,7 @@ export const ConceptLink = memo(function ConceptLink({
           goToPath,
         );
       }}
-      className={conceptRowClass(
-        conceptActive,
-        indentClass,
-        rowGapClass,
-        onPath,
-      )}
+      className={conceptRowClass(conceptActive, indentClass, rowGapClass)}
     >
       <span className="flex items-baseline justify-between gap-2">
         <span className="min-w-0">
@@ -967,7 +961,7 @@ export function SubjectRow({
       </Link>
       <NavFold open={subjectOpen} instant={searching} unbox>
         <ul className="contents">
-          <NavGuide level="subject" />
+          {stackPathPins ? <NavGuide level="subject" /> : null}
           {subject.sections?.length ? (
             <>
               {subject.clusters.map((cluster) => (

@@ -693,6 +693,23 @@ body {
   --nav-sticky-cover: 0px;
 }
 
+/* Phone/tablet: scroll the tree normally; sticky stacks need a wide sidebar. */
+@media (max-width: 1023px) {
+  #handbook-nav-aside [data-nav-sticky-cover],
+  #handbook-nav-aside [data-nav-guide] {
+    display: none;
+  }
+
+  #handbook-nav-aside [data-nav-path="true"],
+  #handbook-nav-aside [data-nav-pin],
+  #handbook-nav-aside li[data-nav-pin],
+  #handbook-nav-aside [data-concept-id][data-nav-path="true"] {
+    position: relative;
+    top: auto;
+    transform: none;
+  }
+}
+
 /* While the path slides off with its track, don't let the mask cover the next track. */
 #handbook-nav-aside[data-nav-sticky-sliding] [data-nav-sticky-cover] {
   --nav-sticky-cover-height: max(
