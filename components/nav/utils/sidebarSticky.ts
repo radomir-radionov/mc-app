@@ -23,6 +23,51 @@ const GUIDE_VARS: Record<string, string | undefined> = {
   subject: "--nav-guide-subject",
 };
 
+/** Matches `0.375rem` rounded-corner trim on `[data-nav-guide]`. */
+const GUIDE_END_TRIM_PX = 6;
+
+const TRACK_CHILD_ROW =
+  '[data-nav="subject"], [data-nav="topic"], [data-nav="cluster"], [data-nav="section"]';
+const TRACK_BOUNDARY = '[data-nav="track"], [data-nav="root-section"]';
+
+function scrollerContentY(scroller: HTMLElement, element: HTMLElement): number {
+  const scrollerRect = scroller.getBoundingClientRect();
+  return (
+    element.getBoundingClientRect().top - scrollerRect.top + scroller.scrollTop
+  );
+}
+
+function followsInDocument(after: Element, before: Element): boolean {
+  return (
+    (after.compareDocumentPosition(before) &
+      Node.DOCUMENT_POSITION_FOLLOWING) !==
+    0
+  );
+}
+
+/** Last visible row in an open track (`display: contents` safe). */
+export function lastNavRowInTrack(
+  nav: HTMLElement,
+  trackHeader: HTMLElement,
+): HTMLElement {
+  const tracks = [...nav.querySelectorAll<HTMLElement>(TRACK_BOUNDARY)];
+  const nextTrack =
+    tracks.find(
+      (track) => track !== trackHeader && followsInDocument(track, trackHeader),
+    ) ?? null;
+  let last: HTMLElement = trackHeader;
+  for (const row of nav.querySelectorAll<HTMLElement>(TRACK_CHILD_ROW)) {
+    if (!followsInDocument(row, trackHeader)) {
+      continue;
+    }
+    if (nextTrack && !followsInDocument(nextTrack, row)) {
+      continue;
+    }
+    last = row;
+  }
+  return last;
+}
+
 function stickySpacing(nav: Element) {
   const scroller =
     nav.closest(`#${HANDBOOK_NAV_ASIDE_ID}`) ??
@@ -123,6 +168,61 @@ export function measureNavChromeInset(navElement?: HTMLElement | null): number {
   return Math.max(0, Math.round(chrome.offsetHeight));
 }
 
+/**
+ * Height of the thick track guide through the open track subtree. The cover-based
+ * height only spans pinned rows, so it collapses to zero when the track header is
+ * the sole pinned row even though nested subjects/topics are visible.
+ */
+export function measureOpenTrackGuideSpan(
+  nav: Element,
+  _vars: StickyVars,
+): number | undefined {
+  const scopeLi = nav.querySelector("li[data-nav-sticky-scope]");
+  const trackHeader = scopeLi?.querySelector<HTMLElement>('[data-nav="track"]');
+  if (!trackHeader || !(nav instanceof HTMLElement)) {
+    return undefined;
+  }
+  const scroller =
+    nav.closest(`#${HANDBOOK_NAV_ASIDE_ID}`) ??
+    document.getElementById(HANDBOOK_NAV_ASIDE_ID);
+  if (!(scroller instanceof HTMLElement)) {
+    return undefined;
+  }
+  const { gap } = stickySpacing(nav);
+  const guideStart =
+    scrollerContentY(scroller, trackHeader) + trackHeader.offsetHeight + gap;
+  const lastRow = lastNavRowInTrack(nav, trackHeader);
+  const boundary = scrollerContentY(scroller, lastRow) + lastRow.offsetHeight;
+  const span = boundary - guideStart - GUIDE_END_TRIM_PX;
+  return Math.max(0, Math.round(span));
+}
+
+function applyOpenTrackGuideSpan(
+  nav: Element,
+  vars: Record<string, string>,
+): void {
+  const scopeLi = nav.querySelector("li[data-nav-sticky-scope]");
+  const trackHeader = scopeLi?.querySelector<HTMLElement>('[data-nav="track"]');
+  const scroller =
+    nav.closest(`#${HANDBOOK_NAV_ASIDE_ID}`) ??
+    document.getElementById(HANDBOOK_NAV_ASIDE_ID);
+  const span = measureOpenTrackGuideSpan(nav, vars);
+  if (
+    span === undefined ||
+    span <= 0 ||
+    !trackHeader ||
+    !(scroller instanceof HTMLElement)
+  ) {
+    delete vars["--nav-guide-track-span"];
+    return;
+  }
+  const { gap } = stickySpacing(nav);
+  const guideStart =
+    scrollerContentY(scroller, trackHeader) + trackHeader.offsetHeight + gap;
+  vars["--nav-guide-track"] = `${Math.round(guideStart)}px`;
+  vars["--nav-guide-track-span"] = `${span}px`;
+}
+
 export function measureStickyPathVars(
   navElement?: HTMLElement | null,
 ): StickyVars {
@@ -152,6 +252,7 @@ export function measureStickyPathVars(
     }
   }
   vars["--nav-sticky-cover"] = `${measureStickyCover(nav, vars)}px`;
+  applyOpenTrackGuideSpan(nav, vars);
   return vars;
 }
 
@@ -226,13 +327,17 @@ export function syncStickyScopeRelease(
   const nextHeader = scope?.nextElementSibling?.querySelector<HTMLElement>(
     '[data-nav="track"], [data-nav="root-section"]',
   );
+  let stickyBottom = stickyStackBottomPx(nav, scroller);
+  const nextTrackBoundary = scope?.nextElementSibling;
+  if (nextTrackBoundary instanceof HTMLElement) {
+    stickyBottom = Math.max(
+      stickyBottom,
+      nextTrackBoundary.getBoundingClientRect().top,
+    );
+  }
   const overflow =
     scope && nextHeader
-      ? Math.max(
-          0,
-          stickyStackBottomPx(nav, scroller) -
-            nextHeader.getBoundingClientRect().top,
-        )
+      ? Math.max(0, stickyBottom - nextHeader.getBoundingClientRect().top)
       : 0;
   const shift = overflow > 0 ? `translateY(-${overflow}px)` : "";
   for (const element of pathElements(nav)) {

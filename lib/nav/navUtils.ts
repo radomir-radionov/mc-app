@@ -3,7 +3,8 @@ import {
   isInterviewTopic,
   type Topic,
 } from "@/lib/catalog";
-import type { InterviewSection } from "./types";
+import type { Concept } from "@/lib/parse";
+import type { InterviewSection, NavConcept, NavTopic } from "./types";
 
 export function sameTitle(left: string, right: string): boolean {
   return left.trim().toLowerCase() === right.trim().toLowerCase();
@@ -67,4 +68,37 @@ export function filterInterviewConcepts<T extends InterviewConcept>(
     return concepts.filter((concept) => concept.interviewSection !== "tasks");
   }
   return concepts;
+}
+
+/** Map parsed topic concepts (with `group`) onto sidebar nav shape. */
+export function navConceptsFromParseConcepts(
+  concepts: readonly Concept[],
+): readonly NavConcept[] {
+  return concepts.map((concept) => ({
+    id: concept.id,
+    title: concept.title,
+    ...(concept.searchText ? { searchText: concept.searchText } : {}),
+    ...(concept.titleSearchText
+      ? { titleSearchText: concept.titleSearchText }
+      : {}),
+    ...(concept.interviewSection
+      ? { interviewSection: concept.interviewSection }
+      : {}),
+    ...(concept.group ? { group: concept.group } : {}),
+  }));
+}
+
+/** Prefer live parsed concepts on the active topic page (section groups stay in sync). */
+export function navTopicWithLiveConcepts(
+  topic: NavTopic,
+  pathname: string,
+  liveConcepts: readonly Concept[] | null,
+): NavTopic {
+  if (!liveConcepts || pathname !== topic.href) {
+    return topic;
+  }
+  return {
+    ...topic,
+    concepts: navConceptsFromParseConcepts(liveConcepts),
+  };
 }

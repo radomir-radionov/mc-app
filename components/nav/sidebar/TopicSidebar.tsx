@@ -12,11 +12,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { HighlightedText, useSearchMode } from "@/components/search";
-import {
-  HANDBOOK_NAV_ASIDE_ID,
-  HANDBOOK_SIDEBAR_ID,
-  NAV_FOLD_OPEN_MS,
-} from "@/constants";
+import { HANDBOOK_NAV_ASIDE_ID, HANDBOOK_SIDEBAR_ID } from "@/constants";
 import { useSidebarAsideScroll } from "../hooks/useSidebarAsideScroll";
 import {
   collectGroupSearchHits,
@@ -45,21 +41,22 @@ import {
 } from "@/lib/nav/bookmarks";
 import type { TrackId } from "@/lib/catalog";
 import { NavChevron, NavFold } from "../ui/NavFold";
-import { NavGuide } from "../ui/NavGuide";
 import {
   applySameDocumentHref,
   followHandbookHref,
   queueHandbookHref,
 } from "../utils/hash";
 import { useHandbookLocation } from "../hooks/useHandbookLocation";
-import { useMdUp } from "../hooks/useMdUp";
+import { useStackPathPins } from "../hooks/useMdUp";
 import { isActiveHref, isActiveTrack } from "../utils/location";
 import { SearchHitList } from "./SearchHitList";
 import { pinNavElement, pinNavForHref } from "../utils/sidebarPin";
 import {
   measureNavChromeInset,
+  measureOpenTrackGuideSpan,
   measureStickyCover,
   measureStickyPathVars,
+  stickyVarsEqual,
   syncStickyScopeRelease,
   writeStickyVars,
   type StickyVars,
@@ -126,8 +123,6 @@ export const TopicSidebar = memo(function TopicSidebar({
     () => (firstHref ? splitHref(firstHref) : null),
     [firstHref],
   );
-  const activeTrackId =
-    pathGroups.find((group) => isActiveTrack(pathname, group.href))?.id ?? null;
   const searching = query.trim().length > 0;
   const {
     activeConceptId,
@@ -143,7 +138,6 @@ export const TopicSidebar = memo(function TopicSidebar({
     pathname,
     hash,
     searching,
-    activeTrackId,
     activeRootSectionId,
   });
   const router = useRouter();
@@ -184,7 +178,7 @@ export const TopicSidebar = memo(function TopicSidebar({
     }),
     [bookmarkKeys],
   );
-  const stackPathPins = useMdUp();
+  const stackPathPins = useStackPathPins();
   const highlightValue = useMemo(
     () => ({ highlightPathname, stackPathPins }),
     [highlightPathname, stackPathPins],
@@ -293,7 +287,7 @@ export const TopicSidebar = memo(function TopicSidebar({
           </SidebarFoldScopeProvider>
         )}
       </nav>
-      <StickyPathStyles revision={stickyRevision} />
+      {stackPathPins ? <StickyPathStyles revision={stickyRevision} /> : null}
     </SidebarNavProvider>
   );
 });
@@ -325,19 +319,29 @@ function StickyPathStyles({ revision }: { revision: string }) {
 
   useLayoutEffect(() => {
     syncPath();
+    let frame = requestAnimationFrame(() => {
+      syncPath();
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+    };
   }, [syncPath, revision]);
 
   useEffect(() => {
     const scroller = document.getElementById(HANDBOOK_NAV_ASIDE_ID);
+    const nav = document.getElementById(HANDBOOK_SIDEBAR_ID);
     const chrome = document.querySelector<HTMLElement>(
       `#${HANDBOOK_SIDEBAR_ID} [data-nav-chrome]`,
     );
     let resizeObserver: ResizeObserver | null = null;
+    resizeObserver = new ResizeObserver(() => {
+      syncPath();
+    });
     if (chrome) {
-      resizeObserver = new ResizeObserver(() => {
-        syncPath();
-      });
       resizeObserver.observe(chrome);
+    }
+    if (nav) {
+      resizeObserver.observe(nav);
     }
     let frame = 0;
     const onScroll = () => {
@@ -352,11 +356,24 @@ function StickyPathStyles({ revision }: { revision: string }) {
         const nav = document.getElementById(HANDBOOK_SIDEBAR_ID);
         syncStickyScopeRelease(nav);
         const current = previousRef.current;
-        const cover = `${measureStickyCover(undefined, current)}px`;
-        if (current["--nav-sticky-cover"] !== cover) {
+        const navEl = document.getElementById(HANDBOOK_SIDEBAR_ID);
+        const cover = `${measureStickyCover(navEl ?? undefined, current)}px`;
+        const nextVars: StickyVars = {
+          ...current,
+          "--nav-sticky-cover": cover,
+        };
+        if (navEl) {
+          const span = measureOpenTrackGuideSpan(navEl, nextVars);
+          if (span === undefined || span <= 0) {
+            delete nextVars["--nav-guide-track-span"];
+          } else {
+            nextVars["--nav-guide-track-span"] = `${span}px`;
+          }
+        }
+        if (!stickyVarsEqual(current, nextVars)) {
           previousRef.current = writeStickyVars(
             scroller.style,
-            { ...current, "--nav-sticky-cover": cover },
+            nextVars,
             current,
           );
         }
@@ -371,11 +388,6 @@ function StickyPathStyles({ revision }: { revision: string }) {
       window.cancelAnimationFrame(frame);
     };
   }, [applyVars, syncPath]);
-
-  useEffect(() => {
-    const later = window.setTimeout(syncPath, NAV_FOLD_OPEN_MS + 20);
-    return () => window.clearTimeout(later);
-  }, [syncPath, revision]);
 
   return null;
 }
@@ -453,7 +465,11 @@ const TrackGroup = memo(function TrackGroup({
           data-nav-id={group.id}
           data-nav-path={pinPath ? "true" : undefined}
           onClick={(event) => {
-            pinNavElement(event.currentTarget);
+            // Fold toggles remount nested rows; scroll pin fights sticky remeasure.
+            pinNavElement(event.currentTarget, {
+              hold: false,
+              scrollIntoView: false,
+            });
             if (!searching) {
               toggleTrackId(group.id);
             }
@@ -508,18 +524,11 @@ const TrackGroup = memo(function TrackGroup({
         </Link>
       )}
       <NavFold open={hasSidebarChildren && trackOpen} instant={searching} unbox>
-        <ul
-          className={
-            stickyScope
-              ? "contents"
-              : "mt-1.5 ml-1.5 space-y-0.5 border-l-2 border-yellow-200 pl-2 dark:border-yellow-800"
-          }
-        >
+        <ul className="mt-1.5 ml-1.5 space-y-0.5 border-l-2 border-yellow-200 pl-2 dark:border-yellow-800">
           {searching ? (
             <SearchHitList hits={searchHits} />
           ) : (
             <>
-              <NavGuide level="track" />
               {group.hubTopic ? (
                 <TopicRow trackId={group.id} topic={group.hubTopic} hideTitle />
               ) : null}

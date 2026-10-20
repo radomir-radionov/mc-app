@@ -125,9 +125,14 @@ const SUBJECTS_BASE: readonly Subject[] = [
   {
     slug: "core",
     title: "Core",
-    blurb: "Web accessibility and security fundamentals.",
+    blurb: "Browser platform, web accessibility, and security fundamentals.",
     track: "frontend",
     clusters: [
+      {
+        id: "platform",
+        title: "Platform",
+        blurb: "Browser processes, JS engine, rendering, and security model.",
+      },
       {
         id: "accessibility",
         title: "Accessibility",
@@ -173,7 +178,7 @@ const SUBJECTS_BASE: readonly Subject[] = [
       {
         id: "browser",
         title: "Browser",
-        blurb: "Rendering pipeline and performance.",
+        blurb: "Browser platform, rendering pipeline, and performance.",
       },
       {
         id: "additional",
@@ -257,7 +262,8 @@ const SUBJECTS_BASE: readonly Subject[] = [
       {
         id: "browser",
         title: "Browser",
-        blurb: "Document, events, and extra browser APIs.",
+        blurb:
+          "Browser platform (processes, V8, security), DOM, events, and extra APIs.",
       },
       {
         id: "async",
@@ -358,6 +364,11 @@ const SUBJECTS_BASE: readonly Subject[] = [
         id: "type-manipulation",
         title: "Type Manipulation",
         blurb: "Generics, keyof, typeof, conditional and mapped types.",
+      },
+      {
+        id: "api-contracts",
+        title: "API contracts",
+        blurb: "OpenAPI codegen, Zod, typed HTTP clients, and contract drift.",
       },
       {
         id: "classes",
@@ -523,9 +534,21 @@ const SUBJECTS_BASE: readonly Subject[] = [
         blurb: "React 19, SSR, and React Server Components.",
       },
       {
+        id: "architecture",
+        title: "Architecture",
+        blurb:
+          "Atomic, FSD, Bulletproof React, slices, MFE, and monorepo layout.",
+      },
+      {
         id: "ecosystem",
         title: "Ecosystem",
-        blurb: "Architecture, libraries, performance, and legacy.",
+        blurb: "Libraries, data fetching, styling, performance, and legacy.",
+      },
+      {
+        id: "other",
+        title: "Other",
+        blurb:
+          "Build, testing, REST client, backend integration, observability, and platforms.",
       },
       {
         id: "advanced",
@@ -1038,6 +1061,15 @@ function grouped(
 
 const TOPICS_BASE: Topic[] = [
   grouped(
+    "core-browser-platform",
+    "0_core_browser.md",
+    "Browser platform",
+    "Browser work principles, processes, V8, rendering, and security model.",
+    "frontend",
+    "core",
+    "platform",
+  ),
+  grouped(
     "html-a11y",
     "1_html_a11y.md",
     "Accessibility",
@@ -1426,7 +1458,7 @@ const TOPICS_BASE: Topic[] = [
     file: "3_js_browser_hub.md",
     title: "Browser",
     blurb:
-      "DOM, events, windows, files, network, animation, and Web Components.",
+      "Browser platform architecture, DOM, events, windows, files, network, animation, and Web Components.",
     track: "frontend",
     grouping: { subject: "javascript", cluster: "browser" },
   },
@@ -1659,6 +1691,15 @@ const TOPICS_BASE: Topic[] = [
     "frontend",
     "typescript",
     "type-manipulation",
+  ),
+  grouped(
+    "ts-api-contracts",
+    "5_ts_api_contracts.md",
+    "API contracts",
+    "OpenAPI codegen, Zod, typed HTTP clients, and contract drift.",
+    "frontend",
+    "typescript",
+    "api-contracts",
   ),
   grouped(
     "ts-utility-types",
@@ -1954,13 +1995,76 @@ const TOPICS_BASE: Topic[] = [
     "react-19",
   ),
   grouped(
+    "react-architecture",
+    "4_react_architecture.md",
+    "Architecture",
+    "Atomic, FSD, Bulletproof React, slices, MFE, and monorepo layout.",
+    "frontend",
+    "react",
+    "architecture",
+  ),
+  grouped(
     "react-ecosystem",
     "4_react_ecosystem.md",
     "Ecosystem",
-    "Routing, libraries, performance, and legacy.",
+    "Libraries, data fetching, styling, performance, and legacy.",
     "frontend",
     "react",
     "ecosystem",
+  ),
+  grouped(
+    "react-build",
+    "4_react_build.md",
+    "Build tooling",
+    "Vite and Webpack for React — config, code splitting, tree shaking.",
+    "frontend",
+    "react",
+    "other",
+  ),
+  grouped(
+    "react-testing",
+    "4_react_testing.md",
+    "Testing",
+    "Jest, React Testing Library, test pyramid, Playwright/Cypress.",
+    "frontend",
+    "react",
+    "other",
+  ),
+  grouped(
+    "react-api-client",
+    "4_react_api_client.md",
+    "REST API client",
+    "fetch, axios, error handling, and TanStack Query / RTK caching.",
+    "frontend",
+    "react",
+    "other",
+  ),
+  grouped(
+    "react-backend-integration",
+    "4_react_backend_integration.md",
+    "Backend integration",
+    "Microservices, API gateway, BFF, contracts, and partial failure.",
+    "frontend",
+    "react",
+    "other",
+  ),
+  grouped(
+    "react-observability",
+    "4_react_observability.md",
+    "Observability",
+    "Sentry, browser logging, RUM, and CI source maps.",
+    "frontend",
+    "react",
+    "other",
+  ),
+  grouped(
+    "react-platforms",
+    "4_react_platforms.md",
+    "Web & mobile platforms",
+    "SPA, MPA, SSR, PWA, and React Native vs native.",
+    "frontend",
+    "react",
+    "other",
   ),
   grouped(
     "react-redux",
@@ -3276,6 +3380,14 @@ const TOPICS_BASE: Topic[] = [
       "AI-first vs augmented, editors, context window, Context7/Ref, and RTK.",
     track: "ai",
   },
+  {
+    slug: "ai-engineering",
+    file: "0_ai_engineering.md",
+    title: "Engineering",
+    blurb:
+      "AI-first developer habits, verification, and spec-driven development (SDD).",
+    track: "ai",
+  },
   grouped(
     "cursor-core",
     "0_ai_cursor_core.md",
@@ -3357,6 +3469,14 @@ const TOPICS_BASE: Topic[] = [
     track: "behavior",
     hideSidebarConcepts: true,
     hideAnswers: true,
+  },
+  {
+    slug: "engineering-fullstack",
+    file: "0_engineering_fullstack.md",
+    title: "Full-stack role",
+    blurb:
+      "Vertical slice, prod triage, Git/CI/Docker/migrations, secrets and access, design patterns — study map with checklists.",
+    track: "behavior",
   },
   {
     slug: "mvp",
@@ -3527,6 +3647,15 @@ export function getSubject(track: string, slug: string): Subject | undefined {
   return SUBJECTS.find(
     (subject) => subject.track === track && subject.slug === slug,
   );
+}
+
+/** Topic slug whose concepts render on the subject index (e.g. Frontend → Core). */
+const SUBJECT_INTRO_TOPIC_SLUG: Partial<Record<string, string>> = {
+  core: "core-browser-platform",
+};
+
+export function subjectIntroTopicSlug(subject: Subject): string | undefined {
+  return SUBJECT_INTRO_TOPIC_SLUG[subject.slug];
 }
 
 export function subjectForTrack(track: TrackId): Subject | undefined {
@@ -3792,15 +3921,6 @@ function clusterBrowseItems(
       title: topic.title,
       description: topic.blurb,
     });
-  }
-  if (topics.length === 1 && items.length === 1) {
-    return [
-      {
-        href: items[0].href,
-        title: cluster.title,
-        description: cluster.blurb || items[0].description,
-      },
-    ];
   }
   return items;
 }

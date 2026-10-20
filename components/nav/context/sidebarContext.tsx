@@ -23,7 +23,7 @@ export type SidebarChromeValue = {
 export type SidebarHighlightValue = {
   /** Path used for sidebar active highlights; includes optimistic nav targets. */
   highlightPathname: string;
-  /** When false (mobile), only the current leaf row is pinned/highlighted. */
+  /** When false (viewport under 1024px), only the leaf row is pinned/highlighted. */
   stackPathPins: boolean;
 };
 

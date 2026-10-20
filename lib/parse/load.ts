@@ -23,6 +23,34 @@ import {
   withBrowserDocumentConceptGroups,
 } from "@/lib/catalog/browserDocumentHub";
 import {
+  isCoreBrowserTopicSlug,
+  withCoreBrowserConceptGroups,
+} from "@/lib/catalog/coreBrowserHub";
+import {
+  isCssArchitectureTopicSlug,
+  withCssArchitectureConceptGroups,
+} from "@/lib/catalog/cssArchitectureHub";
+import {
+  isCssCoreTopicSlug,
+  withCssCoreConceptGroups,
+} from "@/lib/catalog/cssCoreHub";
+import {
+  isCssLayoutTopicSlug,
+  withCssLayoutConceptGroups,
+} from "@/lib/catalog/cssLayoutHub";
+import {
+  isCssModernTopicSlug,
+  withCssModernConceptGroups,
+} from "@/lib/catalog/cssModernHub";
+import {
+  isCssMotionTopicSlug,
+  withCssMotionConceptGroups,
+} from "@/lib/catalog/cssMotionHub";
+import {
+  isCssVisualTopicSlug,
+  withCssVisualConceptGroups,
+} from "@/lib/catalog/cssVisualHub";
+import {
   isEventsTopicSlug,
   withEventsConceptGroups,
 } from "@/lib/catalog/eventsHub";
@@ -70,7 +98,7 @@ type ParsedEntry = {
   readonly promise: Promise<ParsedTopic>;
 };
 
-const PARSE_LOGIC_REVISION = 24;
+const PARSE_LOGIC_REVISION = 27;
 
 type ParseCache = {
   markdown: Map<string, StoredRead>;
@@ -287,6 +315,27 @@ function outlineForTopic(
   if (isBrowserDocumentTopicSlug(topic.slug)) {
     return withBrowserDocumentConceptGroups(outline);
   }
+  if (isCoreBrowserTopicSlug(topic.slug)) {
+    return withCoreBrowserConceptGroups(outline);
+  }
+  if (isCssLayoutTopicSlug(topic.slug)) {
+    return withCssLayoutConceptGroups(outline);
+  }
+  if (isCssCoreTopicSlug(topic.slug)) {
+    return withCssCoreConceptGroups(outline);
+  }
+  if (isCssVisualTopicSlug(topic.slug)) {
+    return withCssVisualConceptGroups(outline);
+  }
+  if (isCssMotionTopicSlug(topic.slug)) {
+    return withCssMotionConceptGroups(outline);
+  }
+  if (isCssModernTopicSlug(topic.slug)) {
+    return withCssModernConceptGroups(outline);
+  }
+  if (isCssArchitectureTopicSlug(topic.slug)) {
+    return withCssArchitectureConceptGroups(outline);
+  }
   if (isEventsTopicSlug(topic.slug)) {
     return withEventsConceptGroups(outline);
   }
@@ -322,6 +371,48 @@ function parsedForTopic(topic: Topic, parsed: ParsedTopic): ParsedTopic {
     return {
       ...parsed,
       concepts: withBrowserDocumentConceptGroups(parsed.concepts),
+    };
+  }
+  if (isCoreBrowserTopicSlug(topic.slug)) {
+    return {
+      ...parsed,
+      concepts: withCoreBrowserConceptGroups(parsed.concepts),
+    };
+  }
+  if (isCssLayoutTopicSlug(topic.slug)) {
+    return {
+      ...parsed,
+      concepts: withCssLayoutConceptGroups(parsed.concepts),
+    };
+  }
+  if (isCssCoreTopicSlug(topic.slug)) {
+    return {
+      ...parsed,
+      concepts: withCssCoreConceptGroups(parsed.concepts),
+    };
+  }
+  if (isCssVisualTopicSlug(topic.slug)) {
+    return {
+      ...parsed,
+      concepts: withCssVisualConceptGroups(parsed.concepts),
+    };
+  }
+  if (isCssMotionTopicSlug(topic.slug)) {
+    return {
+      ...parsed,
+      concepts: withCssMotionConceptGroups(parsed.concepts),
+    };
+  }
+  if (isCssModernTopicSlug(topic.slug)) {
+    return {
+      ...parsed,
+      concepts: withCssModernConceptGroups(parsed.concepts),
+    };
+  }
+  if (isCssArchitectureTopicSlug(topic.slug)) {
+    return {
+      ...parsed,
+      concepts: withCssArchitectureConceptGroups(parsed.concepts),
     };
   }
   if (isEventsTopicSlug(topic.slug)) {

@@ -693,6 +693,23 @@ body {
   --nav-sticky-cover: 0px;
 }
 
+/* Phone/tablet: scroll the tree normally; sticky stacks need a wide sidebar. */
+@media (max-width: 1023px) {
+  #handbook-nav-aside [data-nav-sticky-cover],
+  #handbook-nav-aside [data-nav-guide] {
+    display: none;
+  }
+
+  #handbook-nav-aside [data-nav-path="true"],
+  #handbook-nav-aside [data-nav-pin],
+  #handbook-nav-aside li[data-nav-pin],
+  #handbook-nav-aside [data-concept-id][data-nav-path="true"] {
+    position: relative;
+    top: auto;
+    transform: none;
+  }
+}
+
 /* While the path slides off with its track, don't let the mask cover the next track. */
 #handbook-nav-aside[data-nav-sticky-sliding] [data-nav-sticky-cover] {
   --nav-sticky-cover-height: max(
@@ -758,20 +775,25 @@ body {
 
 #handbook-nav-aside [data-nav-guide="track"] {
   --nav-guide-top: var(--nav-guide-track, var(--nav-sticky-cover));
+  --nav-guide-height: max(
+    0px,
+    var(
+      --nav-guide-track-span,
+      calc(
+        var(--nav-sticky-cover) - var(--nav-guide-top) - var(--nav-sticky-gap) -
+          0.375rem
+      )
+    )
+  );
   width: 2px;
   margin-left: -10px;
 }
 
-/* The active track list is display:contents so the pinned path can slide.
-   Put the indent back on the nested rows. The track header stays full width. */
+/* Track header stays full width; nested rows live in the bordered ul. */
 #handbook-nav-aside li[data-nav-sticky-scope] > ul > li a,
 #handbook-nav-aside li[data-nav-sticky-scope] > ul > li button {
-  margin-left: 0.875rem;
-  width: calc(100% - 0.875rem);
-}
-
-#handbook-nav-aside li[data-nav-sticky-scope] > ul > [data-nav-guide="track"] {
-  margin-left: 0.375rem;
+  margin-left: 0;
+  width: 100%;
 }
 
 #handbook-nav-aside li[data-nav-sticky-scope] [data-nav-guide="subject"] {

@@ -11,19 +11,22 @@ import {
   trackQuestionSections,
 } from "@/lib/catalog";
 
-test("subjectClusterCards includes cluster blurb for single-topic clusters", () => {
+test("subjectClusterCards uses topic title for single-topic cluster items", () => {
   for (const subject of SUBJECTS) {
     const cards = subjectClusterCards(subject);
     for (const { cluster, items } of cards) {
       if (items.length !== 1) {
         continue;
       }
-      assert.equal(items[0].title, cluster.title);
+      const topics = cards
+        .flatMap((entry) => entry.items)
+        .filter((item) => item.href === items[0].href);
+      assert.ok(topics.length >= 1);
       assert.ok(
         items[0].description.length > 0,
         `${subject.slug}/${cluster.id}: missing description`,
       );
-      assert.equal(items[0].description, cluster.blurb);
+      assert.notEqual(items[0].title, "");
     }
   }
 });

@@ -23,6 +23,7 @@ import {
 import { hashIdFrom } from "@/lib/nav/navUtils";
 import { handbookLocation } from "../utils/hash";
 import {
+  isActiveTrack,
   isHomePath,
   locationForPath,
   type NavLocation,
@@ -128,23 +129,33 @@ export function sidebarNavLocation(
   };
 }
 
+/** Match open-track sync to the effective nav path (includes optimistic pending routes). */
+export function activeTrackIdForNavPath(
+  sections: readonly NavRootSection[],
+  navPathname: string,
+): TrackId | null {
+  const groups = navGroupsForPath(sections, navPathname);
+  return (
+    groups.find((group) => isActiveTrack(navPathname, group.href))?.id ?? null
+  );
+}
+
 export function useSidebarOpen({
   sections,
   pathname,
   hash,
   searching,
-  activeTrackId,
   activeRootSectionId,
 }: {
   sections: readonly NavRootSection[];
   pathname: string;
   hash: string;
   searching: boolean;
-  activeTrackId: TrackId | null;
   activeRootSectionId: NavRootSectionId;
 }) {
   const nav = sidebarNavLocation(sections, pathname, hash);
   const { location } = nav;
+  const activeTrackId = activeTrackIdForNavPath(sections, nav.pathname);
   const activeConceptId = hashIdFrom(nav.hash);
   const activeTrackScope =
     activeTrackId !== null

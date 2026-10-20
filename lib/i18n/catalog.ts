@@ -23,6 +23,10 @@ const RU_BLURBS: Readonly<Record<string, string>> = {
     "Agent Skills: SKILL.md, auto vs slash, пути и встроенные.",
   "AI-first vs augmented, editors, Context7/Ref, and RTK.":
     "AI-first vs augmented, редакторы, Context7/Ref и RTK.",
+  "AI-first developer habits, verification, and spec-driven development (SDD).":
+    "AI-first привычки разработчика, проверка результата и spec-driven development (SDD).",
+  "Vertical slice, prod triage, Git/CI/Docker/migrations, secrets and access, design patterns — study map with checklists.":
+    "Vertical slice, triage в проде, Git/CI/Docker/миграции, секреты и доступы, паттерны — карта обучения с чеклистами.",
   "Core tips, skills, rules, plugins, slash commands, and questions.":
     "Core tips, skills, rules, plugins, slash-команды и вопросы.",
   "Shortcuts, Run Modes, verification loops, and Cursor Directory.":
@@ -52,6 +56,40 @@ const RU_BLURBS: Readonly<Record<string, string>> = {
     "Типы приложений и realtime-транспорты.",
   "Architecture, libraries, performance, and legacy.":
     "Архитектура, библиотеки, производительность и legacy.",
+  "Atomic Design, FSD, feature folders, and micro-frontends.":
+    "Atomic Design, FSD, feature folders и micro-frontends.",
+  "Atomic, FSD, Bulletproof React, slices, MFE, and monorepo layout.":
+    "Atomic, FSD, Bulletproof React, slices, MFE и monorepo layout.",
+  "SPA, micro-frontends, FSD, client routing, and rendering modes.":
+    "SPA, micro-frontends, FSD, клиентский роутинг и режимы рендеринга.",
+  "Libraries, data fetching, styling, performance, and legacy.":
+    "Библиотеки, data fetching, стили, производительность и legacy.",
+  "Build, testing, REST client, backend integration, observability, and platforms.":
+    "Build, testing, REST client, backend integration, observability и platforms.",
+  "Vite and Webpack for React — config, code splitting, tree shaking.":
+    "Vite и Webpack для React — config, code splitting, tree shaking.",
+  "Vite and Webpack for React — config, splitting, tree shaking.":
+    "Vite и Webpack для React — config, splitting, tree shaking.",
+  "Jest, React Testing Library, test pyramid, Playwright/Cypress.":
+    "Jest, React Testing Library, пирамида тестов, Playwright/Cypress.",
+  "Jest, React Testing Library, pyramid, Playwright/Cypress.":
+    "Jest, React Testing Library, пирамида, Playwright/Cypress.",
+  "fetch, axios, error handling, and TanStack Query / RTK caching.":
+    "fetch, axios, обработка ошибок и кэш TanStack Query / RTK.",
+  "fetch, axios, error handling, and client-side caching.":
+    "fetch, axios, обработка ошибок и клиентский кэш.",
+  "Microservices, API gateway, BFF, contracts, and partial failure.":
+    "Microservices, API gateway, BFF, контракты и partial failure.",
+  "Microservices, API gateway, BFF, and frontend boundaries.":
+    "Microservices, API gateway, BFF и границы фронтенда.",
+  "Sentry, browser logging, RUM, and CI source maps.":
+    "Sentry, логи в браузере, RUM и source maps в CI.",
+  "Sentry, client logs, RUM, and release debugging.":
+    "Sentry, клиентские логи, RUM и отладка релизов.",
+  "SPA, MPA, SSR, PWA, and React Native vs native.":
+    "SPA, MPA, SSR, PWA и React Native vs native.",
+  "SPA, SSR, PWA, and mobile (React Native) architecture.":
+    "SPA, SSR, PWA и mobile (React Native) architecture.",
   "Architecture, patterns, and scaling.":
     "Архитектура, паттерны и масштабирование.",
   "Arrays, trees, graphs, heaps, and structure selection.":
@@ -87,6 +125,14 @@ const RU_BLURBS: Readonly<Record<string, string>> = {
     "Безопасность браузера, Core Web Vitals и интеграции.",
   "Browser security and third-party integrations.":
     "Безопасность браузера и сторонние интеграции.",
+  "Browser platform, web accessibility, and security fundamentals.":
+    "Платформа браузера, веб-доступность и основы безопасности.",
+  "Browser processes, JS engine, rendering, and security model.":
+    "Процессы браузера, движок JS, рендеринг и модель безопасности.",
+  "Processes, V8, rendering pipeline, and security model overview.":
+    "Процессы, V8, пайплайн рендеринга и обзор модели безопасности.",
+  "Browser work principles, processes, V8, rendering, and security model.":
+    "Принципы работы браузера, процессы, V8, рендеринг и модель безопасности.",
   "Bundlers, CI, Docker, and delivery.": "Бандлеры, CI, Docker и доставка.",
   "Call signatures, overloads, and this typing.":
     "Сигнатуры вызова, перегрузки и типизация this.",
@@ -153,10 +199,14 @@ const RU_BLURBS: Readonly<Record<string, string>> = {
   "Documents, aggregation, and Mongoose.": "Документы, агрегации и Mongoose.",
   "Document, events, and extra browser APIs.":
     "Document, события и дополнительные браузерные API.",
+  "Browser platform (processes, V8, security), DOM, events, and extra APIs.":
+    "Платформа браузера (процессы, V8, безопасность), DOM, события и доп. API.",
   "DOM tree, querying, mutation, BOM, and script loading.":
     "DOM-дерево, поиск, мутации, BOM и загрузка скриптов.",
   "DOM, events, windows, files, network, animation, and Web Components.":
     "DOM, события, окна, файлы, сеть, анимация и Web Components.",
+  "Browser platform architecture, DOM, events, windows, files, network, animation, and Web Components.":
+    "Архитектура платформы браузера, DOM, события, окна, файлы, сеть, анимация и Web Components.",
   "EC2, S3, RDS, Lambda, SQS, and common AWS services.":
     "EC2, S3, RDS, Lambda, SQS и типовые сервисы AWS.",
   "ES modules, CommonJS, resolution, and module emit targets.":
@@ -236,6 +286,8 @@ const RU_BLURBS: Readonly<Record<string, string>> = {
     "Дженерики, type operators и utility types.",
   "Generics, keyof, typeof, conditional and mapped types.":
     "Дженерики, keyof, typeof, conditional и mapped types.",
+  "OpenAPI codegen, Zod, typed HTTP clients, and contract drift.":
+    "OpenAPI codegen, Zod, типизированные HTTP-клиенты и расхождение контракта.",
   "Git, tooling, and adjacent topics.": "Git, тулинг и смежные темы.",
   "Go, Scala, and other backend language interview prep.":
     "Подготовка к собеседованиям по Go, Scala и другим backend-языкам.",
@@ -628,6 +680,8 @@ const RU_BLURBS: Readonly<Record<string, string>> = {
     "Восстановление, командные практики, hooks и продвинутый Git.",
   "Rendering pipeline and performance.":
     "Пайплайн рендеринга и производительность.",
+  "Browser platform, rendering pipeline, and performance.":
+    "Платформа браузера, пайплайн рендеринга и производительность.",
   "Replication, sharding, caching, and OLTP scaling.":
     "Репликация, шардинг, кэширование и масштабирование OLTP.",
   "REST, RPC, auth, and storage.": "REST, RPC, auth и хранилище.",

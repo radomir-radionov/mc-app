@@ -15,6 +15,7 @@ import {
   navChildBrowseCards,
   subjectAfterSectionClusterCards,
   subjectClusterCards,
+  subjectIntroTopicSlug,
   subjectRootClusterCards,
   subjectSectionClusterCards,
   topicRouteParams,
@@ -158,19 +159,46 @@ export default async function TopicPage({
           subjectAfterSectionClusterCards(subject),
         )
       : undefined;
-    const sections =
+    const introSlug = subjectIntroTopicSlug(subject);
+    const introLoaded = introSlug
+      ? await loadTopicPage(trackId, introSlug, locale)
+      : undefined;
+    const clusterSections =
       groupedSections || rootSections || afterRootSections
         ? undefined
         : localizeClusterSections(locale, subjectClusterCards(subject));
+    const sections =
+      introLoaded && clusterSections
+        ? clusterSections.filter((section) => section.cluster.id !== "platform")
+        : clusterSections;
     return (
       <main className="w-full max-w-5xl px-4 pt-5 pb-10 sm:px-6">
         <PageTitleHeader title={subject.title} />
-        <SubjectClusterHub
-          sections={sections}
-          rootSections={rootSections}
-          groupedSections={groupedSections}
-          afterRootSections={afterRootSections}
-        />
+        {introLoaded ? (
+          <div className="mt-8 max-w-3xl">
+            {introLoaded.usedFallback ? (
+              <p className="mb-4 text-sm text-amber-700 dark:text-amber-300">
+                {FALLBACK_NOTE_BADGE[locale]}
+              </p>
+            ) : null}
+            <ConceptList
+              concepts={introLoaded.parsed.concepts}
+              topicTitle={introLoaded.parsed.title}
+              emptyMessage="No concepts were parsed from this topic."
+              groupInterviewSections={introLoaded.parsed.concepts.some(
+                (concept) => Boolean(concept.group),
+              )}
+            />
+          </div>
+        ) : null}
+        <div className={introLoaded ? "mt-10" : undefined}>
+          <SubjectClusterHub
+            sections={sections}
+            rootSections={rootSections}
+            groupedSections={groupedSections}
+            afterRootSections={afterRootSections}
+          />
+        </div>
       </main>
     );
   }
