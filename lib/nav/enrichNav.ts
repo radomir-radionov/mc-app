@@ -8,7 +8,7 @@ import type {
   NavTopic,
 } from "./types";
 
-function mergeTopicConcepts(
+export function mergeTopicConcepts(
   baseConcepts: NavTopic["concepts"],
   richConcepts: NavTopic["concepts"],
 ): NavTopic["concepts"] {
@@ -30,6 +30,9 @@ function mergeTopicConcepts(
       rich.searchText === concept.searchText &&
       rich.titleSearchText === concept.titleSearchText
     ) {
+      if (!concept.group && rich.group) {
+        return { ...concept, group: rich.group };
+      }
       return concept;
     }
     return {
@@ -38,6 +41,11 @@ function mergeTopicConcepts(
       ...(rich.titleSearchText
         ? { titleSearchText: rich.titleSearchText }
         : {}),
+      ...(concept.group
+        ? { group: concept.group }
+        : rich.group
+          ? { group: rich.group }
+          : {}),
     };
   });
 }

@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
 import { ResourcesAutoRefresh } from "@/components/dev/ResourcesAutoRefresh";
-import { themeBootScript } from "@/components/nav/utils/uiStorage";
+import { ThemeBootScript } from "@/components/nav/ThemeBootScript";
 import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
 import "./globals.css";
 
@@ -32,12 +31,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full overflow-hidden antialiased`}
     >
+      <head>
+        <ThemeBootScript />
+      </head>
       <body className="h-full overflow-hidden bg-background font-sans text-foreground">
-        <Script
-          id="theme-boot"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: themeBootScript() }}
-        />
         <ResourcesAutoRefresh />
         {children}
         <Analytics />

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { handbookNavSections } from "./handbook";
-import { enrichNavSections } from "./enrichNav";
+import { enrichNavSections, mergeTopicConcepts } from "./enrichNav";
 import { sectionSwitchHref } from "./sections";
 
 describe("enrichNavSections", () => {
@@ -98,5 +98,23 @@ describe("enrichNavSections", () => {
     assert.ok(
       enrichedBasics?.concepts.some((c) => c.id === "modern-typescript"),
     );
+  });
+
+  it("keeps concept group from the rich index when the shell outline lacks it", () => {
+    const merged = mergeTopicConcepts(
+      [{ id: "flexbox", title: "Flexbox" }],
+      [{ id: "flexbox", title: "Flexbox", group: "Flexbox" }],
+    );
+    assert.equal(merged[0]?.group, "Flexbox");
+  });
+});
+
+describe("mergeTopicConcepts", () => {
+  it("preserves group when search text is unchanged", () => {
+    const merged = mergeTopicConcepts(
+      [{ id: "a", title: "A", searchText: "alpha" }],
+      [{ id: "a", title: "A", searchText: "alpha", group: "Section A" }],
+    );
+    assert.equal(merged[0]?.group, "Section A");
   });
 });

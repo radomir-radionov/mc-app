@@ -19,8 +19,9 @@ import {
 import {
   filterInterviewConcepts,
   isRedundantTopicConceptTitle,
-  sameTitle,
+  navTopicWithLiveConcepts,
 } from "@/lib/nav/navUtils";
+import { useTopicNavConcepts } from "@/components/topic/context/TopicNavConceptsContext";
 import { navTopicTreeContainsHref } from "@/lib/nav/topicTree";
 import { BookmarkStar } from "../ui/BookmarkButton";
 import { NavChevron, NavFold } from "../ui/NavFold";
@@ -32,7 +33,7 @@ import {
   replacePathHash,
   setHashOnPath,
 } from "../utils/hash";
-import { pinNavForHref } from "../utils/sidebarPin";
+import { pinNavElement, pinNavForHref } from "../utils/sidebarPin";
 import { localeFromPathname } from "@/lib/i18n/paths";
 import {
   subjectCautionLabel,
@@ -226,11 +227,14 @@ function ConceptItems({
         const showGroup =
           Boolean(concept.group) &&
           concept.group !== concepts[index - 1]?.group;
+        const groupPad = index === 0 ? "pt-1" : "pt-3";
         return (
           <li key={concept.id} className="contents">
             {showGroup ? (
               <p
-                className={`${indentClass} pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400`}
+                role="heading"
+                aria-level={3}
+                className={`${indentClass} pb-1 ${groupPad} text-[11px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400`}
               >
                 {concept.group}
               </p>
@@ -274,6 +278,8 @@ const SectionTopicLink = memo(function SectionTopicLink({
   const { fold, patchFold } = useScopedSidebarFold();
   const { topicHref: openTopicHref } = fold(trackId);
   const { isBookmarked } = useSidebarBookmarks();
+  const topicNavConcepts = useTopicNavConcepts();
+  const navTopic = navTopicWithLiveConcepts(topic, pathname, topicNavConcepts);
   const active = isActiveHref(highlightPathname, topic.href);
   const isHitTopic = first?.pathname === topic.href;
   const isFirstTopic = isHitTopic && first.hash === "";
@@ -287,12 +293,12 @@ const SectionTopicLink = memo(function SectionTopicLink({
   );
   const pinPath = navPathPinned(onPath, mobileLeaf, stackPathPins);
   const bookmarked = isBookmarked(topic.href);
-  const concepts = visibleConcepts(topic, query, mode);
+  const concepts = visibleConcepts(navTopic, query, mode);
   const sidebarConcepts = searching
     ? concepts
-    : filterInterviewConcepts(topic, concepts);
+    : filterInterviewConcepts(navTopic, concepts);
   const showConceptNav =
-    !topic.hideSidebarConcepts && sidebarConcepts.length > 0;
+    !navTopic.hideSidebarConcepts && sidebarConcepts.length > 0;
   const showTopicFold = showConceptNav && sidebarConcepts.length > 1;
   const topicFoldOpen = openTopicHref === topic.href;
   const topicOpen = searching ? showConceptNav : showTopicFold && topicFoldOpen;
@@ -316,9 +322,12 @@ const SectionTopicLink = memo(function SectionTopicLink({
         aria-current={active ? "page" : undefined}
         aria-expanded={showTopicFold ? topicOpen : undefined}
         onClick={(event) => {
-          pinNavForHref(event.currentTarget, pathname, topic.href);
           if (pathname === topic.href) {
             event.preventDefault();
+            pinNavElement(event.currentTarget, {
+              hold: false,
+              scrollIntoView: false,
+            });
             if (window.location.hash) {
               applySameDocumentHref(pathname, "", pathname);
             }
@@ -332,6 +341,7 @@ const SectionTopicLink = memo(function SectionTopicLink({
             }
             return;
           }
+          pinNavForHref(event.currentTarget, pathname, topic.href);
           queueHandbookHref(topic.href);
           patchFold(trackId, {
             topicHref: showTopicFold ? topic.href : null,
@@ -358,7 +368,7 @@ const SectionTopicLink = memo(function SectionTopicLink({
         <ul className="contents">
           {showConceptNav ? (
             <TopicConceptNav
-              topic={topic}
+              topic={navTopic}
               concepts={sidebarConcepts}
               indentClass={SECTION_TOPIC_CONCEPT_INDENT}
             />
@@ -467,6 +477,9 @@ export function TopicRow({
   const { activeConceptId } = useSidebarActive();
   const { fold, patchFold } = useScopedSidebarFold();
   const { topicHref: openTopicHref } = fold(trackId);
+  const { isBookmarked } = useSidebarBookmarks();
+  const topicNavConcepts = useTopicNavConcepts();
+  const navTopic = navTopicWithLiveConcepts(topic, pathname, topicNavConcepts);
   const nestedTopics = topic.nestedTopics ?? [];
   const hasNestedTopics = nestedTopics.length > 0;
   const nestedOnPath =
@@ -478,13 +491,13 @@ export function TopicRow({
   const active = isActiveHref(highlightPathname, topic.href);
   const isHitTopic = first?.pathname === topic.href;
   const isFirstTopic = isHitTopic && first.hash === "";
-  const concepts = visibleConcepts(topic, query, mode);
+  const concepts = visibleConcepts(navTopic, query, mode);
   const hasConcepts = concepts.length > 0;
   const sidebarConcepts = searching
     ? concepts
-    : filterInterviewConcepts(topic, concepts);
+    : filterInterviewConcepts(navTopic, concepts);
   const showConceptNav =
-    !topic.hideSidebarConcepts &&
+    !navTopic.hideSidebarConcepts &&
     sidebarConcepts.length > 0 &&
     !hasNestedTopics;
   const showTopicFold =
@@ -496,20 +509,19 @@ export function TopicRow({
   const mobileLeaf = topicIsMobileNavLeaf(
     active,
     highlightPathname,
-    topic.href,
+    navTopic.href,
     activeConceptId,
     nestedOnPath,
   );
   const pinPath = navPathPinned(onPath, mobileLeaf, stackPathPins);
   const topicFoldOpen =
-    openTopicHref === topic.href || nestedOpen || nestedOnPath;
+    openTopicHref === navTopic.href || nestedOpen || nestedOnPath;
   const topicOpen = hideTitle
     ? showConceptNav
     : searching
-      ? !topic.hideSidebarConcepts && (hasConcepts || hasNestedTopics)
+      ? !navTopic.hideSidebarConcepts && (hasConcepts || hasNestedTopics)
       : showTopicFold && topicFoldOpen;
-  const { isBookmarked } = useSidebarBookmarks();
-  const topicBookmarked = isBookmarked(topic.href);
+  const topicBookmarked = isBookmarked(navTopic.href);
   // Flatten sticky headers into the track list so nested containing blocks cannot
   // drag Core/Structure above Frontend/HTML while siblings scroll.
   const indent = compact ? (navKind === "cluster" ? "pl-4" : "pl-6") : "";
@@ -521,7 +533,7 @@ export function TopicRow({
     }
     return (
       <TopicConceptNav
-        topic={topic}
+        topic={navTopic}
         concepts={sidebarConcepts}
         indentClass={conceptIndent}
       />
@@ -538,9 +550,12 @@ export function TopicRow({
         data-nav-id={navId ?? topic.slug}
         data-nav-path={pinPath ? "true" : undefined}
         onClick={(event) => {
-          pinNavForHref(event.currentTarget, pathname, topic.href);
           if (pathname === topic.href) {
             event.preventDefault();
+            pinNavElement(event.currentTarget, {
+              hold: false,
+              scrollIntoView: false,
+            });
             if (window.location.hash) {
               applySameDocumentHref(pathname, "", pathname);
             }
@@ -554,6 +569,7 @@ export function TopicRow({
             }
             return;
           }
+          pinNavForHref(event.currentTarget, pathname, topic.href);
           event.preventDefault();
           patchFold(trackId, {
             topicHref: showTopicFold ? topic.href : null,
@@ -597,7 +613,7 @@ export function TopicRow({
         <ul className="contents">
           {showConceptNav ? (
             <TopicConceptNav
-              topic={topic}
+              topic={navTopic}
               concepts={sidebarConcepts}
               indentClass={conceptIndent}
             />
@@ -641,11 +657,11 @@ export function ClusterRow({
   const onlyTopic = cluster.topics.length === 1 ? cluster.topics[0] : null;
   const navigateHref = clusterNavigateHref(cluster, sectionId, subjectPath);
 
-  if (onlyTopic && sameTitle(cluster.title, onlyTopic.title)) {
+  if (onlyTopic) {
     return (
       <TopicRow
         trackId={trackId}
-        topic={{ ...onlyTopic, title: cluster.title }}
+        topic={onlyTopic}
         compact
         navKind="cluster"
         navId={cluster.id}
@@ -914,9 +930,12 @@ export function SubjectRow({
         data-nav-id={subject.slug}
         data-nav-path={pinPath ? "true" : undefined}
         onClick={(event) => {
-          pinNavForHref(event.currentTarget, pathname, subject.href);
           if (pathname === subject.href) {
             event.preventDefault();
+            pinNavElement(event.currentTarget, {
+              hold: false,
+              scrollIntoView: false,
+            });
             if (!searching) {
               patchFold(trackId, {
                 subjectHref:
@@ -925,6 +944,7 @@ export function SubjectRow({
             }
             return;
           }
+          pinNavForHref(event.currentTarget, pathname, subject.href);
           queueHandbookHref(subject.href);
           patchFold(trackId, { subjectHref: subject.href });
         }}
