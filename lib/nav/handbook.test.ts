@@ -84,7 +84,7 @@ describe("handbookNavSections layout", () => {
         (topic) => topic.slug === "html-interview",
       ),
     );
-    assert.equal(findGroup("behavior", "conspect"), undefined);
+    assert.ok(findGroup("behavior", "conspect")?.entries.length);
     assert.ok(findGroup("behavior", "interviews")?.leafTopic);
   });
 
@@ -341,7 +341,15 @@ describe("handbookNavSections layout", () => {
       inferNavRootSection("/en/frontend/web-api-websockets"),
       "interviews",
     );
-    assert.equal(inferNavRootSection("/en/behavior"), "interviews");
+    assert.equal(inferNavRootSection("/en/behavior"), "conspect");
+    assert.equal(
+      inferNavRootSection("/en/behavior/behavior-questions"),
+      "interviews",
+    );
+    assert.equal(
+      inferNavRootSection("/en/behavior/engineering-fullstack"),
+      "conspect",
+    );
   });
 
   it("switches sections on the same track when possible", () => {
@@ -398,8 +406,12 @@ describe("handbookNavSections layout", () => {
   it("falls back to the first group when the track is missing", () => {
     const sections = handbookNavSections("en");
     assert.equal(
-      sectionSwitchHref(sections, "/en/behavior", "conspect"),
+      sectionSwitchHref(sections, "/en/unknown-track", "conspect"),
       findGroup("frontend", "conspect")?.href,
+    );
+    assert.equal(
+      sectionSwitchHref(sections, "/en/behavior", "conspect"),
+      findGroup("behavior", "conspect")?.href,
     );
   });
 

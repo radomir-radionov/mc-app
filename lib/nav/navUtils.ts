@@ -3,6 +3,7 @@ import {
   isInterviewTopic,
   type Topic,
 } from "@/lib/catalog";
+import { isBehaviorQuestionsTopic } from "@/lib/i18n/behaviorQuestions";
 import type { Concept } from "@/lib/parse";
 import type { InterviewSection, NavConcept, NavTopic } from "./types";
 
@@ -36,8 +37,11 @@ export function isQuestionCluster(clusterId: string): boolean {
 }
 
 export function isInterviewSectionTopic(
-  topic: Pick<Topic, "slug" | "title" | "grouping">,
+  topic: Pick<Topic, "slug" | "title" | "grouping" | "file">,
 ): boolean {
+  if (isBehaviorQuestionsTopic(topic)) {
+    return true;
+  }
   if (isInterviewTasksTopic(topic) || isInterviewTopic(topic)) {
     return true;
   }
