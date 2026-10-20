@@ -10,7 +10,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test",
+    "test": "tsx scripts/run-tests.ts",
     "check-conspect": "tsx scripts/audit.ts",
     "check-order": "tsx scripts/order-audit.ts",
     "check-sidebar": "tsx scripts/audit-sidebar-outlines.ts",
@@ -19,7 +19,7 @@
     "dev:e2e": "next dev -p 3001",
     "cypress:open": "cypress open",
     "cypress:open:dev": "CYPRESS_BASE_URL=http://localhost:3001 cypress open",
-    "cypress:run": "cypress run",
+    "cypress:run": "cypress run --browser chrome",
     "cypress:run:dev": "CYPRESS_BASE_URL=http://localhost:3001 cypress run",
     "test:e2e": "start-server-and-test start:e2e http://127.0.0.1:3456 cypress:run",
     "test:e2e:dev": "start-server-and-test dev:e2e http://localhost:3001 cypress:run"

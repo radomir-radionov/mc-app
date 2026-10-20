@@ -319,7 +319,7 @@ function StickyPathStyles({ revision }: { revision: string }) {
 
   useLayoutEffect(() => {
     syncPath();
-    let frame = requestAnimationFrame(() => {
+    const frame = requestAnimationFrame(() => {
       syncPath();
     });
     return () => {
@@ -358,16 +358,23 @@ function StickyPathStyles({ revision }: { revision: string }) {
         const current = previousRef.current;
         const navEl = document.getElementById(HANDBOOK_SIDEBAR_ID);
         const cover = `${measureStickyCover(navEl ?? undefined, current)}px`;
-        const nextVars: StickyVars = {
-          ...current,
+        const currentRest: StickyVars = Object.fromEntries(
+          Object.entries(current).filter(
+            ([key]) => key !== "--nav-guide-track-span",
+          ),
+        ) as StickyVars;
+        const withCover: StickyVars = {
+          ...currentRest,
           "--nav-sticky-cover": cover,
         };
+        let nextVars: StickyVars = withCover;
         if (navEl) {
-          const span = measureOpenTrackGuideSpan(navEl, nextVars);
-          if (span === undefined || span <= 0) {
-            delete nextVars["--nav-guide-track-span"];
-          } else {
-            nextVars["--nav-guide-track-span"] = `${span}px`;
+          const span = measureOpenTrackGuideSpan(navEl, withCover);
+          if (span !== undefined && span > 0) {
+            nextVars = {
+              ...withCover,
+              "--nav-guide-track-span": `${span}px`,
+            };
           }
         }
         if (!stickyVarsEqual(current, nextVars)) {
