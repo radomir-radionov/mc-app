@@ -66,10 +66,15 @@ function fetchFromGit(): void {
       ["clone", "--depth", "1", "--branch", ref, cloneUrl, tmp],
       { stdio: "inherit" },
     );
+    const commit = execFileSync("git", ["-C", tmp, "rev-parse", "HEAD"], {
+      encoding: "utf8",
+    }).trim();
     const sourceRoot = resolveCloneLayout(tmp);
     fs.rmSync(DEFAULT_RESOURCES_DIR, { recursive: true, force: true });
     fs.cpSync(sourceRoot, DEFAULT_RESOURCES_DIR, { recursive: true });
-    console.log(`ensure-resources: fetched ${ref} from ${url}`);
+    console.log(
+      `ensure-resources: fetched ref "${ref}" (${commit}) from ${url}`,
+    );
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
@@ -81,7 +86,20 @@ function fetchFromGit(): void {
   }
 }
 
+function shouldFetchInCi(): boolean {
+  return (
+    process.env.CI === "true" &&
+    Boolean(process.env.RESOURCES_GIT_URL?.trim()) &&
+    !process.env.MYCONSPECT_NOTES_ROOT?.trim()
+  );
+}
+
 function main(): void {
+  if (shouldFetchInCi()) {
+    fetchFromGit();
+    return;
+  }
+
   if (enHasCatalogMarkdown()) {
     const root = resourcesRoot();
     const viaEnv = Boolean(process.env.MYCONSPECT_NOTES_ROOT?.trim());

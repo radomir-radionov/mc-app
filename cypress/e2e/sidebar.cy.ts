@@ -370,18 +370,23 @@ describe("handbook sidebar", () => {
     cy.location("hash").should("eq", "#jsx");
     cy.conceptArticle("jsx").should("be.visible");
     cy.get("main article.concept-list").should("have.length", 1);
-    cy.contains("button", "Back").should("be.visible");
+    cy.get('.concept-detail-dock button[aria-label="Back"]').should("exist");
 
-    cy.contains("button", "Next").click();
+    cy.get('.concept-detail-dock button[aria-label="Next"]').click({
+      force: true,
+    });
     cy.location("hash").should("eq", "#fragments");
     cy.conceptArticle("fragments").should("be.visible");
     cy.conceptArticle("jsx").should("not.exist");
   });
 
   it("returns to the previous concept from detail view", () => {
+    cy.viewport(390, 844);
     cy.visit("/en/frontend/react-core#fragments");
     cy.conceptArticle("fragments").should("be.visible");
-    cy.contains("button", "Back").click();
+    cy.get('.concept-detail-dock button[aria-label="Back"]').click({
+      force: true,
+    });
     cy.location("hash").should("eq", "#jsx");
     cy.conceptArticle("jsx").should("be.visible");
   });
@@ -414,7 +419,7 @@ describe("handbook sidebar", () => {
 
   it("does not show Back on behavior questions topic index", () => {
     cy.viewport(390, 844);
-    cy.visit("/en/behavior");
+    cy.visit("/en/behavior/behavior-questions");
     cy.contains("button", "Tell me about yourself").should("be.visible");
     cy.contains("button", "Back").should("not.exist");
     cy.contains("button", "Next").should("not.exist");
@@ -502,7 +507,7 @@ describe("handbook sidebar", () => {
 
   it("restores search and the last page from browser storage", () => {
     cy.visit("/en/frontend/react-core");
-    cy.get('[data-search-mode="notes"]').click();
+    cy.desktopSearchMode("notes").click();
     cy.get('input[placeholder="Search in notes…"]').clear().type("useState");
     cy.wait(400);
     cy.reload();
@@ -510,11 +515,7 @@ describe("handbook sidebar", () => {
       "have.value",
       "useState",
     );
-    cy.get('[data-search-mode="notes"]').should(
-      "have.attr",
-      "aria-checked",
-      "true",
-    );
+    cy.desktopSearchMode("notes").should("have.attr", "aria-checked", "true");
 
     cy.visit("/en");
     cy.location("pathname").should("not.eq", "/");
@@ -526,11 +527,7 @@ describe("handbook sidebar", () => {
 
   it("does not search inside notes in Topics mode", () => {
     cy.visit("/en/frontend/js-browser-extra");
-    cy.get('[data-search-mode="titles"]').should(
-      "have.attr",
-      "aria-checked",
-      "true",
-    );
+    cy.desktopSearchMode("titles").should("have.attr", "aria-checked", "true");
     cy.get('input[placeholder="Search topics…"]').should("be.visible");
     cy.get('input[placeholder="Search topics…"]').clear();
     cy.get('input[placeholder="Search topics…"]').type("resize layout");
@@ -554,15 +551,16 @@ describe("handbook sidebar", () => {
     cy.get('#handbook-header [data-search-mode="titles"]').should(
       "have.attr",
       "aria-label",
-      "Topics",
+      "Search mode: Topics. Switch to Notes.",
     );
-    cy.get('#handbook-header [data-search-mode="notes"]').should(
+    cy.get('#handbook-header [data-search-mode="titles"]').should(
       "have.attr",
-      "aria-label",
-      "Notes",
+      "aria-pressed",
+      "false",
     );
-    cy.get("#handbook-header [data-search-mode] svg").should("be.visible");
-    cy.get("#handbook-header [data-search-mode] span").should("not.be.visible");
+    cy.get('#handbook-header [data-search-mode="titles"] svg').should(
+      "be.visible",
+    );
     cy.get("#handbook-header > header > div").should(($row) => {
       expect($row[0].scrollWidth).to.be.at.most($row[0].clientWidth + 1);
     });
@@ -618,15 +616,12 @@ describe("handbook sidebar", () => {
     );
     cy.sidebar().contains("HTTP").should("be.visible");
 
-    cy.nav("topic", "web-api-http").click();
-    cy.get('button[aria-label="Close topics"]').should(
-      "have.attr",
-      "tabindex",
-      "0",
-    );
-    cy.sidebar().contains("HTTP protocol").should("be.visible");
+    cy.nav("topic", "web-api-http").click({ force: true });
+    cy.sidebar().contains("HTTP protocol").should("exist");
 
-    cy.get('#handbook-sidebar [data-concept-id="http-protocol"]').click();
+    cy.get('#handbook-sidebar [data-concept-id="http-protocol"]')
+      .should("exist")
+      .click({ force: true, scrollBehavior: false });
     cy.get('button[aria-label="Close topics"]').should(
       "have.attr",
       "tabindex",

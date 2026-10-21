@@ -698,13 +698,6 @@ export function ClusterRow({
               closeNavSoon(onNavigate);
               return;
             }
-            if (onlyTopic) {
-              patchFold(trackId, { clusterKey: key });
-              queueHandbookHref(onlyTopic.href);
-              goToPath(onlyTopic.href);
-              closeNavSoon(onNavigate);
-              return;
-            }
             const next = `#${cluster.id}`;
             const sameHash = window.location.hash === next;
             if (!searching) {

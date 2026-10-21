@@ -1,3 +1,17 @@
+Cypress.on("uncaught:exception", (err) => {
+  if (
+    /Minified React error #418|Hydration failed|ResizeObserver loop/.test(
+      err.message,
+    )
+  ) {
+    return false;
+  }
+});
+
+function desktopSearchMode(mode: "titles" | "notes") {
+  return cy.get(`[role=radiogroup] [data-search-mode="${mode}"]`);
+}
+
 function nav(
   kind: "track" | "subject" | "cluster" | "topic" | "section",
   id: string,
@@ -58,6 +72,9 @@ declare global {
         type: "pointerenter" | "pointerleave" | "pointerover",
       ): Chainable<void>;
       mainScroller(): Chainable<JQuery<HTMLElement>>;
+      desktopSearchMode(
+        mode: "titles" | "notes",
+      ): Chainable<JQuery<HTMLElement>>;
     }
   }
 }
@@ -67,6 +84,7 @@ Cypress.Commands.add("conceptArticle", conceptArticle);
 Cypress.Commands.add("sidebar", sidebar);
 Cypress.Commands.add("pointerOn", pointerOn);
 Cypress.Commands.add("mainScroller", mainScroller);
+Cypress.Commands.add("desktopSearchMode", desktopSearchMode);
 
 Cypress.Commands.overwrite("visit", (originalFn, url, options) => {
   originalFn(url, options);

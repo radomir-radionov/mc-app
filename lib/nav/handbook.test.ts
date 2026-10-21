@@ -364,7 +364,7 @@ describe("handbookNavSections layout", () => {
     );
     assert.equal(
       sectionSwitchHref(sections, "/en/frontend", "interviews"),
-      "/en/frontend/html-interview",
+      "/en/frontend/web-security-questions",
     );
     assert.equal(
       sectionSwitchHref(sections, "/en/frontend/redux-questions", "conspect"),
@@ -389,7 +389,7 @@ describe("handbookNavSections layout", () => {
     assert.ok(frontend);
     assert.equal(
       groupNavigateHref(frontend, "interviews"),
-      "/en/frontend/html-interview",
+      "/en/frontend/web-security-questions",
     );
     const htmlInterview = interviewTopicsInGroup(frontend).find(
       (topic) => topic.slug === "html-interview",

@@ -2,10 +2,10 @@
 
 import { useHandbookMobileNavOpen } from "@/components/nav/context/handbookMobileNavContext";
 import {
-  useEffect,
   useLayoutEffect,
   useRef,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
@@ -255,13 +255,13 @@ const DETAIL_ACTIONS_DOCK =
 export function ConceptDetailActionsFooter(props: ConceptHeaderActionProps) {
   const navOpen = useHandbookMobileNavOpen();
   const dockRef = useRef<HTMLDivElement>(null);
-  const [portalReady, setPortalReady] = useState(false);
+  const portalReady = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const hasActions =
     props.showBack || props.showNext || props.showBookmark || props.showShare;
-
-  useEffect(() => {
-    setPortalReady(true);
-  }, []);
 
   useLayoutEffect(() => {
     const root = document.documentElement;

@@ -131,7 +131,6 @@ function LanguageSwitcherMenu({
 
   useLayoutEffect(() => {
     if (!open) {
-      setMenuStyle(null);
       return;
     }
     syncMenuPosition();
