@@ -31,8 +31,6 @@ const RU_BLURBS: Readonly<Record<string, string>> = {
     "Принципы и этапы SDLC, затем роли агентов, ворота, MCP и lead time.",
   "Principles, phases, process models, and agentic AI delivery.":
     "Принципы, этапы, модели процесса и агентная AI-поставка.",
-  "Planning through support: six lifecycle stages and Agile overlap.":
-    "От планирования до поддержки: шесть этапов и перекрытие в Agile.",
   "Planning through support: six stages and Agile overlap.":
     "От планирования до поддержки: шесть этапов и перекрытие в Agile.",
   "Principles, six phases, Agile and Waterfall, and multi-agent delivery.":
