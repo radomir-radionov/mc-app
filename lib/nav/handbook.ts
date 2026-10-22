@@ -413,11 +413,7 @@ function buildTrackNavGroup(
   const leaf = leafTopicForTrack(track.id);
   const isLeafTrack = Boolean(leaf && sameTitle(leaf.title, track.title));
 
-  if (section === "conspect" && isLeafTrack) {
-    return null;
-  }
-
-  if (section === "interviews" && isLeafTrack) {
+  if (isLeafTrack) {
     return {
       id: track.id,
       title: catalogBlurb(locale, track.title),

@@ -218,8 +218,8 @@ export function HandbookShell({
                   ? "fixed inset-x-0 top-14 z-20 h-[calc(100dvh-3.5rem)] bg-zinc-900/30 opacity-100 transition-opacity duration-200 ease-out motion-reduce:transition-none md:hidden"
                   : "max-md:hidden fixed inset-x-0 top-14 z-20 h-[calc(100dvh-3.5rem)] bg-zinc-900/30 md:hidden"
               }
-              tabIndex={navOpen && !searching ? 0 : -1}
-              aria-hidden={!navOpen || searching}
+              tabIndex={-1}
+              aria-hidden="true"
               aria-label={chrome.closeMenu}
               onClick={closeNav}
             />
@@ -283,6 +283,7 @@ export function HandbookShell({
             </aside>
             <div
               id={HANDBOOK_MAIN_ID}
+              inert={navOpen ? true : undefined}
               aria-busy={routePending || undefined}
               className={
                 navOpen

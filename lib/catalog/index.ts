@@ -3476,7 +3476,7 @@ const TOPICS_BASE: Topic[] = [
     title: "Full-stack role",
     blurb:
       "Vertical slice, prod triage, Git/CI/Docker/migrations, secrets and access, design patterns — study map with checklists.",
-    track: "behavior",
+    track: "other",
   },
   {
     slug: "mvp",

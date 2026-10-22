@@ -490,6 +490,31 @@ describe("handbook sidebar", () => {
     );
   });
 
+  it("opens an HTML topic menu without navigating away from the current topic", () => {
+    cy.viewport(441, 931);
+    cy.visit("/en/frontend/html-structure");
+    cy.contains("button", "Open topics").click();
+    cy.nav("topic", "html-semantics").should(
+      "have.attr",
+      "aria-expanded",
+      "false",
+    );
+
+    cy.nav("topic", "html-semantics").click();
+
+    cy.location("pathname").should("eq", "/en/frontend/html-structure");
+    cy.nav("topic", "html-semantics").should(
+      "have.attr",
+      "aria-expanded",
+      "true",
+    );
+    cy.nav("topic", "html-structure").should(
+      "have.attr",
+      "aria-expanded",
+      "false",
+    );
+  });
+
   it("opens the chosen concept in detail view from the sidebar", () => {
     cy.visit("/en/frontend/html-performance#core-web-vitals");
     cy.conceptArticle("core-web-vitals").should("be.visible");
@@ -598,8 +623,14 @@ describe("handbook sidebar", () => {
     cy.get('button[aria-label="Close topics"]').should(
       "have.attr",
       "tabindex",
-      "0",
+      "-1",
     );
+    cy.get('button[aria-label="Close topics"]').should(
+      "have.attr",
+      "aria-hidden",
+      "true",
+    );
+    cy.get("#handbook-main").should("have.attr", "inert");
     cy.get("aside").should(($aside) => {
       const box = $aside[0].getBoundingClientRect();
       expect(box.top).to.be.closeTo(56, 2);
@@ -612,7 +643,7 @@ describe("handbook sidebar", () => {
     cy.get('button[aria-label="Close topics"]').should(
       "have.attr",
       "tabindex",
-      "0",
+      "-1",
     );
     cy.sidebar().contains("HTTP").should("be.visible");
 
@@ -627,8 +658,57 @@ describe("handbook sidebar", () => {
       "tabindex",
       "-1",
     );
+    cy.get("#handbook-main").should("not.have.attr", "inert");
     cy.location("pathname").should("eq", "/en/frontend/web-api-http");
     cy.location("hash").should("eq", "#http-protocol");
+  });
+
+  it("keeps the active item in its natural position when opening the mobile sidebar", () => {
+    cy.viewport(441, 931);
+    cy.visit("/en/frontend/core#html-parsing-and-the-dom");
+    cy.contains("button", "Open topics").click();
+
+    cy.get("#handbook-nav-aside").should("have.prop", "scrollTop", 0);
+    cy.nav("track", "frontend").then(($frontend) => {
+      cy.nav("subject", "core").should(($active) => {
+        expect($active[0].getBoundingClientRect().top).to.be.greaterThan(
+          $frontend[0].getBoundingClientRect().bottom,
+        );
+      });
+    });
+  });
+
+  it("keeps adjacent mobile subject rows evenly spaced", () => {
+    cy.viewport(441, 931);
+    cy.visit("/en/backend/database");
+    cy.contains("button", "Open topics").click();
+
+    cy.nav("subject", "nodejs").then(($node) => {
+      cy.nav("subject", "database").should(($database) => {
+        const gap =
+          $database[0].getBoundingClientRect().top -
+          $node[0].getBoundingClientRect().bottom;
+        expect(gap).to.be.closeTo(6, 1);
+      });
+    });
+  });
+
+  it("closes the mobile sidebar when crossing the desktop breakpoint", () => {
+    cy.viewport(390, 844);
+    cy.visit("/en/frontend/web-api");
+    cy.contains("button", "Open topics").click();
+    cy.get("#handbook-main").should("have.attr", "inert");
+
+    cy.viewport(1024, 844);
+    cy.get('#handbook-header button[aria-controls="handbook-sidebar"]').should(
+      "have.attr",
+      "aria-expanded",
+      "false",
+    );
+    cy.get("#handbook-main").should("not.have.attr", "inert");
+
+    cy.viewport(390, 844);
+    cy.get("#handbook-sidebar").should("not.be.visible");
   });
 
   it("shows the last updated day, month, and year next to contact links", () => {

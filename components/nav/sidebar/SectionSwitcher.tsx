@@ -79,7 +79,7 @@ function SectionButton({
       className={
         checked
           ? "inline-flex min-w-0 flex-1 cursor-pointer items-center justify-center truncate rounded bg-white px-2 text-xs font-medium text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-50"
-          : "inline-flex min-w-0 flex-1 cursor-pointer items-center justify-center truncate rounded px-2 text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-100"
+          : "inline-flex min-w-0 flex-1 cursor-pointer items-center justify-center truncate rounded px-2 text-xs font-medium text-zinc-600 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-100"
       }
     >
       {label}
