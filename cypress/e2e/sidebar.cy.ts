@@ -864,20 +864,25 @@ describe("handbook sidebar", () => {
     cy.sidebar().should("be.visible");
   });
 
-  it("dismisses peek when the dock is clicked but keeps the sidebar collapsed", () => {
+  it("opens the sidebar when the dock is clicked during a peek", () => {
     cy.visit("/en/frontend/html-structure");
     cy.get("[data-sidebar-dock]").click();
+    cy.get("[data-sidebar-dock]").should(
+      "have.attr",
+      "aria-label",
+      "Expand topics",
+    );
     cy.pointerOn("aside", "pointerenter");
-    cy.get("#handbook-nav-aside").should("be.visible");
+    cy.sidebar().contains("HTML").should("be.visible");
 
     cy.get("[data-sidebar-dock]").click({ force: true });
-    cy.wait(350);
     cy.get("[data-sidebar-dock]").should(
       "have.attr",
       "aria-label",
       "Collapse topics",
     );
-    cy.get("#handbook-nav-aside").should("be.visible");
+    cy.get("[data-sidebar-dock]").should("have.attr", "aria-expanded", "true");
+    cy.sidebar().contains("HTML").should("be.visible");
   });
 
   it("closes peek after hovering the sidebar, dock, and away", () => {
