@@ -207,6 +207,7 @@ function chromeSubjectShell(subject: NavSubject): NavSubject {
     href: subject.href,
     title: subject.title,
     blurb: subject.blurb,
+    flatNav: subject.flatNav,
     sections: subject.sections?.map((section) => ({
       id: section.id,
       title: section.title,
@@ -239,6 +240,7 @@ function chromeSubjectSidebarOutline(subject: NavSubject): NavSubject {
     href: subject.href,
     title: subject.title,
     blurb: subject.blurb,
+    flatNav: subject.flatNav,
     sections: subject.sections?.map((section) => ({
       id: section.id,
       title: section.title,

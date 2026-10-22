@@ -69,7 +69,7 @@ export function topicCrumbs(
     const cluster = topic.grouping
       ? getCluster(subject, topic.grouping.cluster)
       : undefined;
-    if (cluster) {
+    if (cluster && !subject.flatNav && cluster.title.trim()) {
       trail.push({
         label: cluster.title,
         href: L(locale, clusterHref(subject, cluster)),

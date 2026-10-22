@@ -178,6 +178,7 @@ function entriesForTrack(
           href: localizeHref(locale, subjectHref(subject)),
           title: subject.title,
           blurb: catalogBlurb(locale, subject.blurb),
+          flatNav: subject.flatNav,
           sections: sections?.length ? sections : undefined,
           clusters: sections?.length ? rootClusters : clusters,
           clustersAfterSections: sections?.length

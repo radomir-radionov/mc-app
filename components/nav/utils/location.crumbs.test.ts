@@ -715,6 +715,60 @@ test("siblingNavHrefForPath steps through nested topics inside a cluster", () =>
   );
 });
 
+test("flatNav subject omits cluster from breadcrumbs", () => {
+  const aiSdlcGroups: readonly NavGroup[] = [
+    {
+      id: "ai",
+      title: "AI",
+      href: "/ai",
+      entries: [
+        {
+          kind: "subject",
+          subject: {
+            slug: "sdlc",
+            href: "/ai/sdlc",
+            title: "SDLC",
+            blurb: "",
+            flatNav: true,
+            clusters: [
+              {
+                id: "lifecycle",
+                title: "Lifecycle",
+                href: "/ai/sdlc#lifecycle",
+                topics: [
+                  {
+                    slug: "special-sdlc-principles",
+                    href: "/ai/special-sdlc-principles",
+                    title: "Principles",
+                    blurb: "",
+                    concepts: [],
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ],
+    },
+  ];
+
+  assert.deepEqual(
+    crumbsForPath(aiSdlcGroups, "/ai/sdlc", "#lifecycle", labels).map(
+      (item) => item.label,
+    ),
+    ["Home", "AI", "SDLC"],
+  );
+  assert.deepEqual(
+    crumbsForPath(
+      aiSdlcGroups,
+      "/ai/special-sdlc-principles",
+      "",
+      labels,
+    ).map((item) => item.label),
+    ["Home", "AI", "SDLC", "Principles"],
+  );
+});
+
 test("bookmarkMatchesPage matches topic and concept bookmarks", async () => {
   const { bookmarkMatchesPage } = await import("@/lib/nav/bookmarks");
   const topic = "/en/backend/nodejs-core";

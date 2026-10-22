@@ -1,0 +1,25 @@
+# Git commit messages (qoomon conventional commits)
+# https://gist.github.com/qoomon/5dfcdf8eec66a051ecd85625518cfd13
+
+When generating a Git commit message for this repository, output **exactly one line** — the subject only.
+
+## Required output shape
+
+<type>(<optional scope>): <description>
+
+Nothing else: no blank line, no body, no bullet lists, no file list, no footer.
+
+- Types: feat, fix, refactor, perf, style, test, docs, build, ops, chore
+- Scopes (examples): nav, catalog, i18n, breadcrumbs, config, seo, parser
+- Description: imperative present tense; lowercase first letter; no trailing period
+- Type must be spelled in full (e.g. `feat`, never truncated)
+- Summarize the whole change in one line; do not enumerate each file or test
+
+## Pick type (first match)
+
+fix → feat → test → style → docs → build → ops → chore → perf → refactor
+
+## Examples (entire commit message = one line)
+
+feat(nav): add redirects for AI SDLC topics and improve breadcrumbs
+fix(breadcrumbs): hide cluster title when flatNav is set

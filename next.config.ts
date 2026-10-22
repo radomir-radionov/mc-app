@@ -74,6 +74,36 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
+        source: "/:locale(en|ru)/other/special-sdlc",
+        destination: "/:locale/ai/special-sdlc",
+        permanent: true,
+      },
+      {
+        source: "/other/special-sdlc",
+        destination: "/en/ai/special-sdlc",
+        permanent: true,
+      },
+      {
+        source: "/:locale(en|ru)/other/special-sdlc-principles",
+        destination: "/:locale/ai/special-sdlc-principles",
+        permanent: true,
+      },
+      {
+        source: "/other/special-sdlc-principles",
+        destination: "/en/ai/special-sdlc-principles",
+        permanent: true,
+      },
+      {
+        source: "/:locale(en|ru)/other/special-sdlc-phases",
+        destination: "/:locale/ai/special-sdlc-phases",
+        permanent: true,
+      },
+      {
+        source: "/other/special-sdlc-phases",
+        destination: "/en/ai/special-sdlc-phases",
+        permanent: true,
+      },
+      {
         source: "/other/special-testing",
         destination: "/en/testing",
         permanent: true,

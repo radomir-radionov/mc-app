@@ -63,6 +63,8 @@ export type Subject = {
   readonly track: TrackId;
   readonly sections?: readonly SubjectSection[];
   readonly clusters: readonly TopicCluster[];
+  /** When true (and no sections), list cluster topics under the subject — no cluster row. */
+  readonly flatNav?: boolean;
 };
 
 export type BrowseCard = {
@@ -985,6 +987,21 @@ const SUBJECTS_BASE: readonly Subject[] = [
         id: "questions",
         title: "Questions",
         blurb: "Q&A for Cursor skills, rules, plugins, and slash.",
+      },
+    ],
+  },
+  {
+    slug: "sdlc",
+    title: "SDLC",
+    blurb: "Principles, phases, process models, and agentic AI delivery.",
+    track: "ai",
+    flatNav: true,
+    clusters: [
+      {
+        id: "lifecycle",
+        title: "",
+        blurb:
+          "Principles, six phases, Agile and Waterfall, and multi-agent delivery.",
       },
     ],
   },
@@ -2670,13 +2687,6 @@ const TOPICS_BASE: Topic[] = [
     "interview",
   ),
   {
-    slug: "special-sdlc",
-    file: "7_special_sdlc.md",
-    title: "SDLC",
-    blurb: "Waterfall, Agile, Scrum, and Kanban.",
-    track: "other",
-  },
-  {
     slug: "computer-science",
     file: "7_special_cs.md",
     title: "Computer science",
@@ -3388,6 +3398,42 @@ const TOPICS_BASE: Topic[] = [
       "AI-first developer habits, verification, and spec-driven development (SDD).",
     track: "ai",
   },
+  grouped(
+    "ai-agentic-sdlc",
+    "0_ai_agentic_sdlc.md",
+    "Agentic SDLC",
+    "Classical SDLC principles and phases, then multi-agent roles, gates, MCP, and lead time.",
+    "ai",
+    "sdlc",
+    "lifecycle",
+  ),
+  grouped(
+    "special-sdlc-phases",
+    "7_special_sdlc_phases.md",
+    "Phases",
+    "Planning through support: six stages and Agile overlap.",
+    "ai",
+    "sdlc",
+    "lifecycle",
+  ),
+  grouped(
+    "special-sdlc",
+    "7_special_sdlc.md",
+    "Methodologies",
+    "Waterfall, Agile, Scrum, and Kanban.",
+    "ai",
+    "sdlc",
+    "lifecycle",
+  ),
+  grouped(
+    "special-sdlc-principles",
+    "7_special_sdlc_principles.md",
+    "Principles",
+    "Cyclicity, quality, transparency, risk, user focus, and systematic delivery.",
+    "ai",
+    "sdlc",
+    "lifecycle",
+  ),
   grouped(
     "cursor-core",
     "0_ai_cursor_core.md",

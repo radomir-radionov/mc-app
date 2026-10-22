@@ -44,6 +44,7 @@ export type NavSubject = {
   readonly href: string;
   readonly title: string;
   readonly blurb: string;
+  readonly flatNav?: boolean;
   readonly sections?: readonly NavSection[];
   readonly clusters: readonly NavCluster[];
   readonly clustersAfterSections?: readonly NavCluster[];

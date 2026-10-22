@@ -997,6 +997,19 @@ export function SubjectRow({
                 />
               ))}
             </>
+          ) : subject.flatNav ? (
+            subject.clusters.flatMap((cluster) =>
+              cluster.topics.map((topic) => (
+                <TopicRow
+                  key={topic.slug}
+                  trackId={trackId}
+                  topic={topic}
+                  compact
+                  navKind="topic"
+                  navId={topic.slug}
+                />
+              )),
+            )
           ) : (
             subject.clusters.map((cluster) => (
               <ClusterRow

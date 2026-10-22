@@ -25,6 +25,25 @@ const RU_BLURBS: Readonly<Record<string, string>> = {
     "AI-first vs augmented, редакторы, Context7/Ref и RTK.",
   "AI-first developer habits, verification, and spec-driven development (SDD).":
     "AI-first привычки разработчика, проверка результата и spec-driven development (SDD).",
+  "AI across the delivery pipeline: multi-agent roles, human gates, MCP/RAG infra, lead time metrics.":
+    "ИИ на конвейере поставки: роли агентов, human gates, инфра MCP/RAG, метрики lead time.",
+  "Classical SDLC principles and phases, then multi-agent roles, gates, MCP, and lead time.":
+    "Принципы и этапы SDLC, затем роли агентов, ворота, MCP и lead time.",
+  "Principles, phases, process models, and agentic AI delivery.":
+    "Принципы, этапы, модели процесса и агентная AI-поставка.",
+  "Planning through support: six lifecycle stages and Agile overlap.":
+    "От планирования до поддержки: шесть этапов и перекрытие в Agile.",
+  "Planning through support: six stages and Agile overlap.":
+    "От планирования до поддержки: шесть этапов и перекрытие в Agile.",
+  "Principles, six phases, Agile and Waterfall, and multi-agent delivery.":
+    "Принципы, шесть этапов, Agile и Waterfall, мультиагентная поставка.",
+  Principles: "Принципы",
+  Phases: "Этапы",
+  Methodologies: "Методологии",
+  "Cyclicity, quality, transparency, risk, user focus, and systematic delivery.":
+    "Цикличность, качество, прозрачность, риски, фокус на пользователе и системный подход.",
+  "Planning through support: six lifecycle stages and Agile overlap.":
+    "От планирования до поддержки: шесть этапов жизненного цикла и перекрытие в Agile.",
   "Vertical slice, prod triage, Git/CI/Docker/migrations, secrets and access, design patterns — study map with checklists.":
     "Vertical slice, triage в проде, Git/CI/Docker/миграции, секреты и доступы, паттерны — карта обучения с чеклистами.",
   "Core tips, skills, rules, plugins, slash commands, and questions.":

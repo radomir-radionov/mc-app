@@ -98,7 +98,11 @@ export function Breadcrumbs({
               ) : (
                 <span
                   aria-current={isLast ? "page" : undefined}
-                  className="px-1.5 py-0.5 font-medium text-zinc-900 dark:text-zinc-50"
+                  className={
+                    isLast
+                      ? "rounded-md bg-yellow-50 px-1.5 py-0.5 font-medium text-zinc-900 ring-1 ring-yellow-200 dark:bg-yellow-950 dark:text-zinc-50 dark:ring-yellow-800"
+                      : "px-1.5 py-0.5 font-medium text-zinc-900 dark:text-zinc-50"
+                  }
                 >
                   {item.label}
                 </span>
