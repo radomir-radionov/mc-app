@@ -46,13 +46,14 @@ jobs:
       - run: npm ci
       - name: Fetch study notes
         run: npm run ensure-resources
-      - uses: cypress-io/github-action@v6
+      - uses: cypress-io/github-action@v7.4.6
         with:
           install: false
           browser: chrome
           build: npm run build
           start: npm run start:e2e
-          wait-on: http://127.0.0.1:3456
+          wait-on: "http://127.0.0.1:3456"
+          wait-on-timeout: 120
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

@@ -26,12 +26,15 @@ function compactSectionItems(sections: readonly ClusterSection[]) {
 }
 
 function multiItemSection({ cluster, items }: ClusterSection) {
+  const showHeading = cluster.title.trim().length > 0;
   return (
     <section key={cluster.id} id={cluster.id} className="scroll-mt-24">
-      <h2 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-        {cluster.title}
-      </h2>
-      <div className="mt-4">
+      {showHeading ? (
+        <h2 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+          {cluster.title}
+        </h2>
+      ) : null}
+      <div className={showHeading ? "mt-4" : undefined}>
         <CardGrid items={items} />
       </div>
     </section>

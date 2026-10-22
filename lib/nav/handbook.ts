@@ -178,6 +178,7 @@ function entriesForTrack(
           href: localizeHref(locale, subjectHref(subject)),
           title: subject.title,
           blurb: catalogBlurb(locale, subject.blurb),
+          flatNav: subject.flatNav,
           sections: sections?.length ? sections : undefined,
           clusters: sections?.length ? rootClusters : clusters,
           clustersAfterSections: sections?.length
@@ -413,11 +414,7 @@ function buildTrackNavGroup(
   const leaf = leafTopicForTrack(track.id);
   const isLeafTrack = Boolean(leaf && sameTitle(leaf.title, track.title));
 
-  if (section === "conspect" && isLeafTrack) {
-    return null;
-  }
-
-  if (section === "interviews" && isLeafTrack) {
+  if (isLeafTrack) {
     return {
       id: track.id,
       title: catalogBlurb(locale, track.title),

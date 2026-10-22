@@ -84,8 +84,14 @@ describe("handbookNavSections layout", () => {
         (topic) => topic.slug === "html-interview",
       ),
     );
-    assert.ok(findGroup("behavior", "conspect")?.entries.length);
-    assert.ok(findGroup("behavior", "interviews")?.leafTopic);
+    assert.equal(
+      findGroup("behavior", "conspect")?.leafTopic?.slug,
+      "behavior-questions",
+    );
+    assert.equal(
+      findGroup("behavior", "interviews")?.leafTopic?.slug,
+      "behavior-questions",
+    );
   });
 
   it("marks TypeScript Reference as flat appendix nav", () => {
@@ -347,7 +353,7 @@ describe("handbookNavSections layout", () => {
       "interviews",
     );
     assert.equal(
-      inferNavRootSection("/en/behavior/engineering-fullstack"),
+      inferNavRootSection("/en/other/engineering-fullstack"),
       "conspect",
     );
   });
@@ -412,6 +418,10 @@ describe("handbookNavSections layout", () => {
     assert.equal(
       sectionSwitchHref(sections, "/en/behavior", "conspect"),
       findGroup("behavior", "conspect")?.href,
+    );
+    assert.equal(
+      sectionSwitchHref(sections, "/en/behavior", "interviews"),
+      findGroup("behavior", "interviews")?.leafTopic?.href,
     );
   });
 

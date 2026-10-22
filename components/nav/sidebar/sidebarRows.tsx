@@ -65,6 +65,7 @@ import {
   useSidebarFoldScope,
   useSidebarHighlight,
 } from "../context/sidebarContext";
+import { useHandbookMobileNavOpen } from "../context/handbookMobileNavContext";
 
 function RowTitle({
   text,
@@ -467,6 +468,7 @@ export function TopicRow({
 }) {
   const { query, mode, pathname, searching, first, onNavigate, goToPath } =
     useSidebarChrome();
+  const mobileNavOpen = useHandbookMobileNavOpen();
   const { highlightPathname, stackPathPins } = useSidebarHighlight();
   const { activeConceptId } = useSidebarActive();
   const { fold, patchFold } = useScopedSidebarFold();
@@ -544,6 +546,17 @@ export function TopicRow({
         data-nav-id={navId ?? topic.slug}
         data-nav-path={pinPath ? "true" : undefined}
         onClick={(event) => {
+          if (mobileNavOpen && !searching && showTopicFold) {
+            event.preventDefault();
+            pinNavElement(event.currentTarget, {
+              hold: false,
+              scrollIntoView: false,
+            });
+            patchFold(trackId, {
+              topicHref: topicOpen ? null : topic.href,
+            });
+            return;
+          }
           if (pathname === topic.href) {
             event.preventDefault();
             pinNavElement(event.currentTarget, {
@@ -984,6 +997,19 @@ export function SubjectRow({
                 />
               ))}
             </>
+          ) : subject.flatNav ? (
+            subject.clusters.flatMap((cluster) =>
+              cluster.topics.map((topic) => (
+                <TopicRow
+                  key={topic.slug}
+                  trackId={trackId}
+                  topic={topic}
+                  compact
+                  navKind="topic"
+                  navId={topic.slug}
+                />
+              )),
+            )
           ) : (
             subject.clusters.map((cluster) => (
               <ClusterRow

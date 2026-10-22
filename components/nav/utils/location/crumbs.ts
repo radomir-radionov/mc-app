@@ -26,7 +26,7 @@ import {
   stripLocalePrefix,
 } from "@/lib/i18n/paths";
 import { isActiveTrack } from "./active";
-import { isTopicAliasCluster } from "./shared";
+import { clusterTrailCrumbs } from "./shared";
 
 export function crumbsForPath(
   groups: readonly NavGroup[],
@@ -75,15 +75,15 @@ export function crumbsForPath(
       for (const entry of group.entries) {
         switch (entry.kind) {
           case "cluster":
-            if (
-              hashId === entry.cluster.id &&
-              !isTopicAliasCluster(entry.cluster)
-            ) {
-              return [
-                home,
-                { label: group.title, href: group.href },
-                { label: entry.cluster.title },
-              ];
+            if (hashId === entry.cluster.id) {
+              const clusterCrumbs = clusterTrailCrumbs(entry.cluster);
+              if (clusterCrumbs.length > 0) {
+                return [
+                  home,
+                  { label: group.title, href: group.href },
+                  ...clusterCrumbs,
+                ];
+              }
             }
             break;
           case "subject": {
@@ -92,17 +92,16 @@ export function crumbsForPath(
                   (item) => item.id === hashId,
                 )
               : undefined;
-            if (
-              cluster &&
-              pathname === entry.subject.href &&
-              !isTopicAliasCluster(cluster)
-            ) {
-              return [
-                home,
-                { label: group.title, href: group.href },
-                { label: entry.subject.title, href: entry.subject.href },
-                { label: cluster.title },
-              ];
+            if (cluster && pathname === entry.subject.href) {
+              const clusterCrumbs = clusterTrailCrumbs(cluster, entry.subject);
+              if (clusterCrumbs.length > 0) {
+                return [
+                  home,
+                  { label: group.title, href: group.href },
+                  { label: entry.subject.title, href: entry.subject.href },
+                  ...clusterCrumbs,
+                ];
+              }
             }
             break;
           }
@@ -141,13 +140,16 @@ export function crumbsForPath(
                   (item) => item.id === hashId,
                 )
               : undefined;
-            if (cluster && !isTopicAliasCluster(cluster)) {
-              return [
-                home,
-                { label: group.title, href: group.href },
-                { label: entry.subject.title, href: entry.subject.href },
-                { label: cluster.title },
-              ];
+            if (cluster) {
+              const clusterCrumbs = clusterTrailCrumbs(cluster, entry.subject);
+              if (clusterCrumbs.length > 0) {
+                return [
+                  home,
+                  { label: group.title, href: group.href },
+                  { label: entry.subject.title, href: entry.subject.href },
+                  ...clusterCrumbs,
+                ];
+              }
             }
             return [
               home,
@@ -187,9 +189,7 @@ export function crumbsForPath(
               [
                 { label: group.title, href: group.href },
                 { label: entry.subject.title, href: entry.subject.href },
-                ...(isTopicAliasCluster(cluster)
-                  ? []
-                  : [{ label: cluster.title, href: cluster.href }]),
+                ...clusterTrailCrumbs(cluster, entry.subject),
                 { label: topic.title, href: topic.href },
               ],
               topic,
@@ -200,15 +200,15 @@ export function crumbsForPath(
         }
         case "cluster": {
           if (pathname === entry.subjectHref) {
-            if (
-              hashId === entry.cluster.id &&
-              !isTopicAliasCluster(entry.cluster)
-            ) {
-              return [
-                home,
-                { label: group.title, href: entry.subjectHref },
-                { label: entry.cluster.title },
-              ];
+            if (hashId === entry.cluster.id) {
+              const clusterCrumbs = clusterTrailCrumbs(entry.cluster);
+              if (clusterCrumbs.length > 0) {
+                return [
+                  home,
+                  { label: group.title, href: entry.subjectHref },
+                  ...clusterCrumbs,
+                ];
+              }
             }
             hubTitle = group.title;
             break;
@@ -223,9 +223,7 @@ export function crumbsForPath(
             home,
             [
               { label: group.title, href: group.href },
-              ...(isTopicAliasCluster(entry.cluster)
-                ? []
-                : [{ label: entry.cluster.title, href: entry.cluster.href }]),
+              ...clusterTrailCrumbs(entry.cluster),
               { label: topic.title, href: topic.href },
             ],
             topic,
@@ -280,9 +278,7 @@ function typesHubSectionTrail(
   const base: Crumb[] = [
     { label: group.title, href: group.href },
     { label: subject.title, href: subject.href },
-    ...(isTopicAliasCluster(cluster)
-      ? []
-      : [{ label: cluster.title, href: cluster.href }]),
+    ...clusterTrailCrumbs(cluster, subject),
     { label: typesHub.title, href: typesHub.href },
   ];
   if (topic.slug === TYPES_HUB_SLUG) {
