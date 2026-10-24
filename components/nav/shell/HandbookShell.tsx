@@ -139,8 +139,7 @@ export function HandbookShell({
       : chrome.pageLoading;
   const showBusy =
     routePending || searchPending || (searching && notesCorpusLoading);
-  const sidebarQuery =
-    searching && deferredQuery.trim().length === 0 ? query : deferredQuery;
+  const sidebarQuery = deferredQuery;
   const searchSheet = searching && !searchSheetDismissed && navOpen;
   const menuOpen = navOpen;
   const onToggleNav = useCallback(() => {
