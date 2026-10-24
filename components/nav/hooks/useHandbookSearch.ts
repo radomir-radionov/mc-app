@@ -6,7 +6,7 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useSyncExternalStore,
+  useState,
   startTransition,
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -19,12 +19,7 @@ import {
 } from "@/lib/nav";
 import { applySameDocumentHref, followHandbookHref } from "../utils/hash";
 import { useSearchCorpus } from "../utils/searchCorpus";
-import {
-  getServerSearchUi,
-  readSearchUi,
-  subscribeUi,
-  writeUi,
-} from "../utils/uiStorage";
+import { readSearchUi, writeUi } from "../utils/uiStorage";
 
 export function useHandbookSearch(
   groups: readonly NavGroup[],
@@ -36,13 +31,21 @@ export function useHandbookSearch(
   const pathnameRef = useRef(pathname);
   const restoreHrefRef = useRef<string | null>(null);
   const searchTimerRef = useRef<number | null>(null);
-  const stored = useSyncExternalStore(
-    subscribeUi,
-    readSearchUi,
-    getServerSearchUi,
-  );
-  const query = stored.query;
-  const mode = stored.mode;
+  const [query, setQuery] = useState("");
+  const [mode, setMode] = useState<SearchMode>("titles");
+  const hydratedRef = useRef(false);
+  const modeRef = useRef<SearchMode>("titles");
+
+  useEffect(() => {
+    if (hydratedRef.current) {
+      return;
+    }
+    hydratedRef.current = true;
+    const stored = readSearchUi();
+    setQuery(stored.query);
+    setMode(stored.mode);
+    modeRef.current = stored.mode;
+  }, []);
   const notesCorpus = useSearchCorpus(mode === "notes");
   const searchGroups = useMemo(() => {
     if (!notesCorpus) {
@@ -53,7 +56,6 @@ export function useHandbookSearch(
   }, [groups, notesCorpus]);
   const groupsRef = useRef(searchGroups);
   const deferredQuery = useDeferredValue(query);
-  const modeRef = useRef(mode);
 
   useEffect(() => {
     onSearchActiveRef.current = onSearchActive;
@@ -133,8 +135,9 @@ export function useHandbookSearch(
   }
 
   function changeQuery(value: string) {
-    const wasEmpty = readSearchUi().query.trim().length === 0;
-    writeUi({ query: value });
+    const wasEmpty = query.trim().length === 0;
+    setQuery(value);
+    writeUi({ query: value }, { notify: false });
     if (value.trim().length > 0 && wasEmpty) {
       onSearchActiveRef.current?.();
     }
@@ -147,7 +150,8 @@ export function useHandbookSearch(
       searchTimerRef.current = null;
     }
     restoreHrefRef.current = null;
-    writeUi({ query: "" });
+    setQuery("");
+    writeUi({ query: "" }, { notify: false });
   }
 
   /** Keep the current page when the search box is later cleared (e.g. after picking a hit). */
@@ -156,7 +160,8 @@ export function useHandbookSearch(
   }
 
   function changeMode(nextMode: SearchMode) {
-    writeUi({ mode: nextMode });
+    setMode(nextMode);
+    writeUi({ mode: nextMode }, { notify: false });
     modeRef.current = nextMode;
     if (query.trim().length > 0) {
       onSearchActiveRef.current?.();

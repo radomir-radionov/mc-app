@@ -24,6 +24,15 @@ const EMPTY_SEARCH = { query: EMPTY.query, mode: EMPTY.mode };
 let cache: StoredUi | null = null;
 let searchCache: { query: string; mode: SearchMode } = EMPTY_SEARCH;
 const listeners = new Set<() => void>();
+let queryPersistTimer: number | null = null;
+const QUERY_PERSIST_MS = 400;
+
+export type WriteUiOptions = {
+  /** When false, subscribers are not notified (debounced search typing). */
+  notify?: boolean;
+  /** When false, localStorage is updated on the next debounced flush only. */
+  persist?: boolean;
+};
 
 function emitUi() {
   for (const listener of listeners) {
@@ -97,6 +106,42 @@ function asTheme(value: unknown): StoredTheme {
   }
 }
 
+function parseStoredUi(raw: string): StoredUi {
+  const parsed: unknown = JSON.parse(raw);
+  if (!parsed || typeof parsed !== "object") {
+    return EMPTY;
+  }
+  const record = parsed as Record<string, unknown>;
+  return {
+    query: asQuery(record.query),
+    mode: asSearchMode(record.mode),
+    href: asHref(record.href),
+    sidebarCollapsed: record.sidebarCollapsed === true,
+    theme: asTheme(record.theme),
+  };
+}
+
+function flushUiPersist() {
+  if (cache === null) {
+    return;
+  }
+  try {
+    window.localStorage.setItem(UI_STORAGE_KEY, JSON.stringify(cache));
+  } catch {
+    // Private mode or a full quota should not break browsing.
+  }
+}
+
+function scheduleQueryPersist() {
+  if (queryPersistTimer !== null) {
+    window.clearTimeout(queryPersistTimer);
+  }
+  queryPersistTimer = window.setTimeout(() => {
+    queryPersistTimer = null;
+    flushUiPersist();
+  }, QUERY_PERSIST_MS);
+}
+
 export function readUi(): StoredUi {
   try {
     const raw = window.localStorage.getItem(UI_STORAGE_KEY);
@@ -104,19 +149,10 @@ export function readUi(): StoredUi {
       cache = EMPTY;
       return cache;
     }
-    const parsed: unknown = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object") {
-      cache = EMPTY;
+    if (cache !== null) {
       return cache;
     }
-    const record = parsed as Record<string, unknown>;
-    cache = {
-      query: asQuery(record.query),
-      mode: asSearchMode(record.mode),
-      href: asHref(record.href),
-      sidebarCollapsed: record.sidebarCollapsed === true,
-      theme: asTheme(record.theme),
-    };
+    cache = parseStoredUi(raw);
     return cache;
   } catch {
     cache = EMPTY;
@@ -161,15 +197,25 @@ export function writeTheme(theme: ThemePreference) {
   applyThemeClass(theme);
 }
 
-export function writeUi(patch: Partial<StoredUi>) {
+export function writeUi(patch: Partial<StoredUi>, options?: WriteUiOptions) {
   cache = { ...readUi(), ...patch };
   searchSnapshot(cache);
-  try {
-    window.localStorage.setItem(UI_STORAGE_KEY, JSON.stringify(cache));
-  } catch {
-    // Private mode or a full quota should not break browsing.
+  const notify = options?.notify !== false;
+  const persist = options?.persist !== false;
+  if (persist) {
+    if (Object.keys(patch).length === 1 && "query" in patch) {
+      scheduleQueryPersist();
+    } else {
+      if (queryPersistTimer !== null) {
+        window.clearTimeout(queryPersistTimer);
+        queryPersistTimer = null;
+      }
+      flushUiPersist();
+    }
   }
-  emitUi();
+  if (notify) {
+    emitUi();
+  }
 }
 
 /** Inline boot script: apply `.dark` before paint to avoid FOUC. */
