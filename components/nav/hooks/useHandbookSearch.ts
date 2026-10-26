@@ -7,7 +7,6 @@ import {
   useMemo,
   useRef,
   useState,
-  startTransition,
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { SEARCH_NAV_DELAY_MS } from "@/constants";
@@ -17,6 +16,7 @@ import {
   type NavGroup,
   type SearchMode,
 } from "@/lib/nav";
+import { sectionSearchGroups } from "@/lib/nav/sectionSearchGroups";
 import { applySameDocumentHref, followHandbookHref } from "../utils/hash";
 import { useSearchCorpus } from "../utils/searchCorpus";
 import { readSearchUi, writeUi } from "../utils/uiStorage";
@@ -32,6 +32,7 @@ export function useHandbookSearch(
   const restoreHrefRef = useRef<string | null>(null);
   const searchTimerRef = useRef<number | null>(null);
   const [query, setQuery] = useState("");
+  const [queryEdited, setQueryEdited] = useState(false);
   const [mode, setMode] = useState<SearchMode>("titles");
   const hydratedRef = useRef(false);
   const modeRef = useRef<SearchMode>("titles");
@@ -47,13 +48,10 @@ export function useHandbookSearch(
     modeRef.current = stored.mode;
   }, []);
   const notesCorpus = useSearchCorpus(mode === "notes");
-  const searchGroups = useMemo(() => {
-    if (!notesCorpus) {
-      return groups;
-    }
-    const inSection = new Set(groups);
-    return notesCorpus.filter((group) => inSection.has(group));
-  }, [groups, notesCorpus]);
+  const searchGroups = useMemo(
+    () => sectionSearchGroups(groups, notesCorpus, mode),
+    [groups, notesCorpus, mode],
+  );
   const groupsRef = useRef(searchGroups);
   const deferredQuery = useDeferredValue(query);
 
@@ -79,9 +77,7 @@ export function useHandbookSearch(
   const goTo = useCallback(
     (target: string) => {
       followHandbookHref(target, pathnameRef.current, (path) => {
-        startTransition(() => {
-          router.replace(path, { scroll: false });
-        });
+        router.replace(path, { scroll: false });
       });
     },
     [router],
@@ -136,6 +132,7 @@ export function useHandbookSearch(
 
   function changeQuery(value: string) {
     const wasEmpty = query.trim().length === 0;
+    setQueryEdited(true);
     setQuery(value);
     writeUi({ query: value }, { notify: false });
     if (value.trim().length > 0 && wasEmpty) {
@@ -188,6 +185,7 @@ export function useHandbookSearch(
   return {
     query,
     deferredQuery,
+    queryEdited,
     mode,
     searchGroups,
     notesCorpusLoading,

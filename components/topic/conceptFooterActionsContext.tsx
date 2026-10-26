@@ -74,31 +74,60 @@ function conceptFooterActionsActive(props: ConceptHeaderActionProps) {
 
 export function ConceptFooterActionsRegistrar(props: ConceptHeaderActionProps) {
   const { setActions } = useConceptFooterActionsContext();
+  const {
+    title,
+    chrome,
+    variant,
+    showBack,
+    backHref,
+    onBack,
+    showNext,
+    nextHref,
+    onNext,
+    showBookmark,
+    showShare,
+    conceptId,
+  } = props;
   const active = conceptFooterActionsActive(props);
+  const actions = useMemo(
+    (): ConceptHeaderActionProps => ({
+      title,
+      chrome,
+      variant,
+      showBack,
+      backHref,
+      onBack,
+      showNext,
+      nextHref,
+      onNext,
+      showBookmark,
+      showShare,
+      conceptId,
+    }),
+    [
+      title,
+      chrome,
+      variant,
+      showBack,
+      backHref,
+      onBack,
+      showNext,
+      nextHref,
+      onNext,
+      showBookmark,
+      showShare,
+      conceptId,
+    ],
+  );
 
   useLayoutEffect(() => {
     if (!active) {
       setActions(null);
       return;
     }
-    setActions(props);
+    setActions(actions);
     return () => setActions(null);
-  }, [
-    active,
-    setActions,
-    props.title,
-    props.variant,
-    props.showBack,
-    props.showNext,
-    props.showBookmark,
-    props.showShare,
-    props.backHref,
-    props.nextHref,
-    props.conceptId,
-    props.onBack,
-    props.onNext,
-    props.chrome,
-  ]);
+  }, [active, actions, setActions]);
 
   return null;
 }

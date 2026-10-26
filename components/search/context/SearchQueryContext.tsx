@@ -6,11 +6,13 @@ import type { SearchMode } from "@/lib/nav";
 export type SearchQueryValue = {
   readonly query: string;
   readonly mode: SearchMode;
+  readonly queryEdited: boolean;
 };
 
 export const SearchQueryContext = createContext<SearchQueryValue>({
   query: "",
   mode: "titles",
+  queryEdited: false,
 });
 
 export function useSearchQuery() {
@@ -19,4 +21,8 @@ export function useSearchQuery() {
 
 export function useSearchMode() {
   return useContext(SearchQueryContext).mode;
+}
+
+export function useSearchQueryEdited() {
+  return useContext(SearchQueryContext).queryEdited;
 }

@@ -21,7 +21,6 @@ import {
   topicRouteParams,
   type Topic,
 } from "@/lib/catalog";
-import { isTypesHubSlug } from "@/lib/catalog/typesHub";
 import { catalogBlurb } from "@/lib/i18n/catalog";
 import { FALLBACK_NOTE_BADGE } from "@/lib/i18n/chrome";
 import { isLocale, localeStaticParams, type Locale } from "@/lib/i18n/locales";

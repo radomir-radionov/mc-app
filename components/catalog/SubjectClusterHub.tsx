@@ -80,7 +80,7 @@ export function SubjectClusterHub({
     };
   }, [clusterId, sections, groupedSections, rootSections, afterRootSections]);
 
-  const focusedCluster = useMemo(() => {
+  const focusedClusterId = useMemo(() => {
     if (!clusterId) {
       return null;
     }
@@ -93,21 +93,21 @@ export function SubjectClusterHub({
     for (const pool of pools) {
       const hit = pool?.find((section) => section.cluster.id === clusterId);
       if (hit) {
-        return hit.cluster;
+        return hit.cluster.id;
       }
     }
     return null;
   }, [clusterId, filtered]);
 
   useLayoutEffect(() => {
-    if (!focusedCluster) {
+    if (!focusedClusterId) {
       return;
     }
     const main = document.getElementById(HANDBOOK_MAIN_ID);
     if (main instanceof HTMLElement) {
       main.scrollTop = 0;
     }
-  }, [focusedCluster?.id, location.pathname]);
+  }, [focusedClusterId, location.pathname]);
 
   return (
     <ClusterCardSections

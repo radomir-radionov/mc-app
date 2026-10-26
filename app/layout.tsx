@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ResourcesAutoRefresh } from "@/components/dev/ResourcesAutoRefresh";
+import { ConceptHashBootScript } from "@/components/nav/ConceptHashBootScript";
 import { ThemeBootScript } from "@/components/nav/ThemeBootScript";
 import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
 import "./globals.css";
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <head>
         <ThemeBootScript />
+        <ConceptHashBootScript />
       </head>
       <body className="h-full overflow-hidden bg-background font-sans text-foreground">
         <ResourcesAutoRefresh />

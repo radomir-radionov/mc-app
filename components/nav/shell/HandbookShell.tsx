@@ -69,14 +69,10 @@ export function HandbookShell({
 }) {
   const pathname = usePathname() ?? "/";
   const locale = localeFromPathname(pathname);
-  const enrichedSections = useEnrichedNavSections(sections);
-  const groups = useMemo(
-    () => allNavGroups(enrichedSections),
-    [enrichedSections],
-  );
+  const shellGroups = useMemo(() => allNavGroups(sections), [sections]);
   const sectionGroups = useMemo(
-    () => navGroupsForPath(enrichedSections, pathname),
-    [enrichedSections, pathname],
+    () => navGroupsForPath(sections, pathname),
+    [sections, pathname],
   );
   const { navOpen, closeNav, toggleNav, openNav } = useMobileNav();
   const { collapsed, expandSidebar, toggleSidebar } = useSidebarCollapsed();
@@ -93,6 +89,7 @@ export function HandbookShell({
   const {
     query,
     deferredQuery,
+    queryEdited,
     mode,
     notesCorpusLoading,
     searchPending,
@@ -128,10 +125,15 @@ export function HandbookShell({
     dismissNav();
   }, [clearQuery, dismissNav]);
   const searchValue = useMemo(
-    () => ({ query: deferredQuery, mode }),
-    [deferredQuery, mode],
+    () => ({ query: deferredQuery, mode, queryEdited }),
+    [deferredQuery, mode, queryEdited],
   );
   const searching = query.trim().length > 0;
+  const enrichedSections = useEnrichedNavSections(sections, mode === "notes");
+  const groups = useMemo(
+    () => allNavGroups(enrichedSections),
+    [enrichedSections],
+  );
   const busyLabel = routePending
     ? chrome.pageLoading
     : notesCorpusLoading || searchPending
@@ -177,7 +179,7 @@ export function HandbookShell({
       ? SIDEBAR_DESKTOP_PEEK
       : SIDEBAR_DESKTOP_COLLAPSED
     : SIDEBAR_DESKTOP_OPEN;
-  useRememberLocation(groups);
+  useRememberLocation(shellGroups);
   useApplyPendingHash();
   useResetMainScroll();
 
@@ -273,7 +275,6 @@ export function HandbookShell({
                     chrome={chrome}
                     locale={locale}
                     onNavigate={selectNavResult}
-                    searching={searching}
                     lastUpdatedIso={lastUpdatedIso}
                     lastUpdatedLabel={lastUpdatedLabel}
                   />

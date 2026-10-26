@@ -179,36 +179,30 @@ export function SiteHeader({
   );
 }
 
-const DRAWER_FOOTER_DEFAULT =
+const DRAWER_FOOTER_SURFACE =
   "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950";
-
-const DRAWER_FOOTER_SEARCH =
-  "border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950";
 
 export function DrawerFooter({
   chrome,
   locale,
   onNavigate,
-  searching = false,
   lastUpdatedIso,
   lastUpdatedLabel,
 }: {
   chrome: ChromeCopy;
   locale: ReturnType<typeof localeFromPathname>;
   onNavigate?: () => void;
-  searching?: boolean;
   lastUpdatedIso: string;
   lastUpdatedLabel: string;
 }) {
-  const surface = searching ? DRAWER_FOOTER_SEARCH : DRAWER_FOOTER_DEFAULT;
-
   return (
-    <div className={`flex shrink-0 flex-col max-md:border-t ${surface}`}>
+    <div
+      className={`flex shrink-0 flex-col max-md:border-t ${DRAWER_FOOTER_SURFACE}`}
+    >
       <MobileHandbookFooter
         chrome={chrome}
         locale={locale}
         onNavigate={onNavigate}
-        searching={searching}
         lastUpdatedIso={lastUpdatedIso}
         lastUpdatedLabel={lastUpdatedLabel}
       />

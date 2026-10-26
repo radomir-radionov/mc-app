@@ -1,12 +1,20 @@
 "use client";
 
-import { memo, useEffect, useMemo, useRef } from "react";
+import {
+  memo,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { usePathname } from "next/navigation";
 import { useHandbookLocation } from "@/components/nav/hooks/useHandbookLocation";
 import {
   HighlightedText,
   useSearchMode,
   useSearchQuery,
+  useSearchQueryEdited,
 } from "@/components/search";
 import {
   BookmarkButton,
@@ -19,7 +27,7 @@ import { CopyConceptLinkButton } from "./CopyConceptLinkButton";
 import { handbookMain } from "@/components/topic/utils/conceptScroll";
 import { chromeFor } from "@/lib/i18n/chrome";
 import { localeFromPathname } from "@/lib/i18n/paths";
-import { conceptMatchesQuery } from "@/lib/nav";
+import { nextConceptHash } from "@/lib/nav/conceptHash";
 import type { ChromeCopy } from "@/lib/nav";
 import type { Concept } from "@/lib/parse";
 import {
@@ -103,17 +111,38 @@ export function ConceptList({
 }) {
   const query = useSearchQuery();
   const mode = useSearchMode();
+  const queryEdited = useSearchQueryEdited();
   const pathname = usePathname() ?? "/en";
   const chrome = useMemo(
     () => chromeFor(localeFromPathname(pathname)),
     [pathname],
   );
-  const { activeConceptId: activeId } = useHandbookLocation();
+  const { activeConceptId } = useHandbookLocation();
+  const [bootConceptId, setBootConceptId] = useState("");
   const flat = concepts.length === 1;
+  const resolvedConceptId = activeConceptId || bootConceptId;
   const activeConcept = useMemo(
-    () => concepts.find((concept) => concept.id === activeId) ?? null,
-    [activeId, concepts],
+    () => concepts.find((concept) => concept.id === resolvedConceptId) ?? null,
+    [resolvedConceptId, concepts],
   );
+
+  useLayoutEffect(() => {
+    function syncConceptHashFromUrl() {
+      const id = hashIdFrom(window.location.hash);
+      const root = document.documentElement;
+      if (id && concepts.some((concept) => concept.id === id)) {
+        root.dataset.conceptHash = id;
+        setBootConceptId(id);
+        return;
+      }
+      delete root.dataset.conceptHash;
+      setBootConceptId("");
+    }
+    syncConceptHashFromUrl();
+    window.addEventListener("hashchange", syncConceptHashFromUrl);
+    return () =>
+      window.removeEventListener("hashchange", syncConceptHashFromUrl);
+  }, [concepts, pathname]);
   const conceptIds = useMemo(
     () => concepts.map((concept) => concept.id),
     [concepts],
@@ -124,26 +153,34 @@ export function ConceptList({
     [chrome, concepts, groupInterviewSections],
   );
   const notesQuery = mode === "notes" ? query : "";
+  const arrivalRef = useRef<{ path: string; hash: string } | null>(null);
 
   useEffect(() => {
-    const needle = query.trim().toLowerCase();
-    if (needle.length > 0) {
-      const hashId = hashIdFrom(window.location.hash);
-      const hashConcept = concepts.find((concept) => concept.id === hashId);
-      if (!hashConcept || !conceptMatchesQuery(hashConcept, needle, mode)) {
-        const match = concepts.find((concept) =>
-          conceptMatchesQuery(concept, needle, mode),
-        );
-        if (match) {
-          setHashIfChanged(match.id);
-        }
-      }
+    if (!arrivalRef.current || arrivalRef.current.path !== pathname) {
+      arrivalRef.current = {
+        path: pathname,
+        hash: hashIdFrom(window.location.hash),
+      };
     }
-  }, [concepts, mode, query]);
+    const nextHash = nextConceptHash({
+      concepts,
+      query,
+      mode,
+      currentHash: hashIdFrom(window.location.hash),
+      arrivalHash: arrivalRef.current.hash,
+      queryEdited,
+    });
+    if (nextHash) {
+      setHashIfChanged(nextHash);
+    }
+  }, [concepts, mode, pathname, query, queryEdited]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    if (resolvedConceptId) {
+      return;
+    }
     scrollMainToTop();
-  }, [pathname, activeId]);
+  }, [pathname, resolvedConceptId]);
 
   if (concepts.length === 0) {
     return (

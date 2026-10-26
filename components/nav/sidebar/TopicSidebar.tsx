@@ -15,7 +15,7 @@ import { HighlightedText, useSearchMode } from "@/components/search";
 import { HANDBOOK_NAV_ASIDE_ID, HANDBOOK_SIDEBAR_ID } from "@/constants";
 import { useSidebarAsideScroll } from "../hooks/useSidebarAsideScroll";
 import {
-  collectGroupSearchHits,
+  collectVisibleGroupSearchHits,
   matchesQuery,
   searchNav,
   splitHref,
@@ -439,11 +439,14 @@ const TrackGroup = memo(function TrackGroup({
   const headerClass = trackHeaderClass(trackHighlighted);
   const stickyScope = onPath && stackPathPins;
   const searchHits = useMemo(
-    () => (searching ? collectGroupSearchHits(group, query, mode) : []),
+    () =>
+      searching
+        ? collectVisibleGroupSearchHits(group, query, mode)
+        : { hits: [], remaining: 0 },
     [group, mode, query, searching],
   );
 
-  if (searching && searchHits.length === 0) {
+  if (searching && searchHits.hits.length === 0) {
     return null;
   }
 
@@ -533,7 +536,10 @@ const TrackGroup = memo(function TrackGroup({
       <NavFold open={hasSidebarChildren && trackOpen} instant={searching} unbox>
         <ul className="mt-1.5 ml-1.5 space-y-0.5 border-l-2 border-yellow-200 pl-2 dark:border-yellow-800">
           {searching ? (
-            <SearchHitList hits={searchHits} />
+            <SearchHitList
+              hits={searchHits.hits}
+              remaining={searchHits.remaining}
+            />
           ) : (
             <>
               {group.hubTopic ? (

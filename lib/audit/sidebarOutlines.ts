@@ -36,23 +36,6 @@ function diffConceptIds(
   };
 }
 
-function loadSearchIndexGroups(
-  locale: Locale,
-  trackId: string,
-): readonly NavGroup[] | null {
-  const file = path.join(
-    process.cwd(),
-    "public",
-    "search-index",
-    locale,
-    `${trackId}.json`,
-  );
-  if (!fs.existsSync(file)) {
-    return null;
-  }
-  return JSON.parse(fs.readFileSync(file, "utf8")) as NavGroup[];
-}
-
 function expectedOutlineIds(
   topic: Topic,
   locale: Locale,

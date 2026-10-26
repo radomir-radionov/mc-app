@@ -100,6 +100,34 @@ export function topicMatchesIndexed(
   return topicMatchesPrepared(prepared, query, mode, bodyHits);
 }
 
+export function topicSearchConcepts(
+  index: HandbookSearchIndex,
+  topic: NavTopic,
+  query: string,
+  mode: SearchMode,
+  bodyHits: Set<number> | null,
+): readonly IndexedConceptMatch[] {
+  const prepared = index.topicOf.get(topic);
+  if (!prepared) {
+    return [];
+  }
+  const matches: IndexedConceptMatch[] = [];
+  for (const concept of prepared.concepts) {
+    if (!conceptMatchesIndexed(concept, query, mode, bodyHits)) {
+      continue;
+    }
+    const titleMatch =
+      concept.title.includes(query) || concept.titleSearch.includes(query);
+    matches.push({ concept: concept.concept, bodyOnly: !titleMatch });
+  }
+  return matches;
+}
+
+export type IndexedConceptMatch = {
+  readonly concept: NavConcept;
+  readonly bodyOnly: boolean;
+};
+
 function conceptMatchesIndexed(
   concept: PreparedConcept,
   query: string,
@@ -200,6 +228,9 @@ function buildSearchIndex(groups: readonly NavGroup[]): HandbookSearchIndex {
       concepts,
     };
     topicOf.set(topic, prepared);
+    for (const nested of topic.nestedTopics ?? []) {
+      prepareTopic(nested);
+    }
     return prepared;
   }
 
