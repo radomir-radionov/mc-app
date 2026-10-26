@@ -35,7 +35,12 @@ type NavSnapshot = {
   pathname: string;
   hash: string;
   activeConceptId: string;
+  locationKey: string;
 };
+
+function navLocationKey(location: NavLocation): string {
+  return `${location.subjectHref ?? ""}\0${location.clusterKey ?? ""}\0${location.sectionKey ?? ""}\0${location.topicHref ?? ""}`;
+}
 
 const EMPTY_FOLD: NavLocation = {
   topicHref: null,
@@ -154,7 +159,11 @@ export function useSidebarOpen({
   activeRootSectionId: NavRootSectionId;
 }) {
   const nav = sidebarNavLocation(sections, pathname, hash);
-  const { location } = nav;
+  const navTopicHref = nav.location.topicHref;
+  const navSubjectHref = nav.location.subjectHref;
+  const navClusterKey = nav.location.clusterKey;
+  const navSectionKey = nav.location.sectionKey;
+  const locationKey = navLocationKey(nav.location);
   const activeTrackId = activeTrackIdForNavPath(sections, nav.pathname);
   const activeConceptId = hashIdFrom(nav.hash);
   const activeTrackScope =
@@ -172,7 +181,17 @@ export function useSidebarOpen({
       if (!activeTrackScope) {
         return new Map();
       }
-      return new Map([[activeTrackScope, location]]);
+      return new Map([
+        [
+          activeTrackScope,
+          {
+            topicHref: navTopicHref,
+            subjectHref: navSubjectHref,
+            clusterKey: navClusterKey,
+            sectionKey: navSectionKey,
+          },
+        ],
+      ]);
     },
   );
   const navSnapshotRef = useRef<
@@ -184,6 +203,7 @@ export function useSidebarOpen({
     pathname: nav.pathname,
     hash: nav.hash,
     activeConceptId,
+    locationKey,
   });
 
   useLayoutEffect(() => {
@@ -194,10 +214,17 @@ export function useSidebarOpen({
       activeRootSectionId === snapshot.activeRootSectionId &&
       nav.pathname === snapshot.pathname &&
       nav.hash === snapshot.hash &&
-      activeConceptId === snapshot.activeConceptId
+      activeConceptId === snapshot.activeConceptId &&
+      snapshot.locationKey === locationKey
     ) {
       return;
     }
+    const location: NavLocation = {
+      topicHref: navTopicHref,
+      subjectHref: navSubjectHref,
+      clusterKey: navClusterKey,
+      sectionKey: navSectionKey,
+    };
     if (!searching) {
       syncOpenState({
         snapshot,
@@ -206,7 +233,7 @@ export function useSidebarOpen({
         pathname: nav.pathname,
         hash: nav.hash,
         activeConceptId,
-        location: nav.location,
+        location,
         setOpenTrackIds,
         setTrackFolds,
         setOpenRootSectionIds,
@@ -219,6 +246,7 @@ export function useSidebarOpen({
       pathname: nav.pathname,
       hash: nav.hash,
       activeConceptId,
+      locationKey,
     };
   }, [
     searching,
@@ -227,6 +255,11 @@ export function useSidebarOpen({
     nav.pathname,
     nav.hash,
     activeConceptId,
+    locationKey,
+    navTopicHref,
+    navSubjectHref,
+    navClusterKey,
+    navSectionKey,
   ]);
 
   const getTrackFold = useCallback(

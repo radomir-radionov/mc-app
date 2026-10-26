@@ -23,6 +23,7 @@ export const NEXTJS_DATA_TOPIC_SECTIONS: readonly {
   {
     section: "Caching & revalidation",
     concepts: [
+      "Revalidation and invalidation across the stack",
       "Caching model overview",
       "use cache directive",
       "revalidateTag",
@@ -38,8 +39,19 @@ export const NEXTJS_DATA_TOPIC_SECTIONS: readonly {
   {
     section: "Server Actions vs Route Handlers",
     concepts: [
+      "Handling mutations in Next.js",
       "Server Actions",
+      "Server Action arguments (bind)",
+      "Closures and encryption",
+      "Serialization and return values",
+      "Cookies and headers in Server Actions",
+      "formAction and programmatic invocation",
+      "Optimistic UI with Server Actions",
       "Route Handlers",
+      "BFF Route Handler",
+      "Handling CORS in Next.js",
+      "Webhooks in Route Handlers",
+      "Caching GET Route Handlers",
       "Comparison table",
       "CSRF with Server Actions",
     ],

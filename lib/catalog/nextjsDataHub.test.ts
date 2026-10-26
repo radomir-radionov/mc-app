@@ -30,6 +30,14 @@ test("nextjsDataConceptSection maps concepts to handbook sections", () => {
     nextjsDataConceptSection("Server Actions"),
     "Server Actions vs Route Handlers",
   );
+  assert.equal(
+    nextjsDataConceptSection("Handling CORS in Next.js"),
+    "Server Actions vs Route Handlers",
+  );
+  assert.equal(
+    nextjsDataConceptSection("Handling mutations in Next.js"),
+    "Server Actions vs Route Handlers",
+  );
 });
 
 test("withNextjsDataConceptGroups assigns groups in handbook order", () => {

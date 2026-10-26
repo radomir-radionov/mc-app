@@ -45,6 +45,7 @@ export function navPathHighlighted(
   onPath: boolean,
   _stackPathPins: boolean,
 ): boolean {
+  void _stackPathPins;
   return highlighted || onPath;
 }
 

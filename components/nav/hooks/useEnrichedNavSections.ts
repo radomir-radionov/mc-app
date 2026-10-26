@@ -2,95 +2,77 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
-import { isTrackId, type TrackId } from "@/lib/catalog";
-import { isLocale } from "@/lib/i18n/locales";
+import type { TrackId } from "@/lib/catalog";
 import { enrichNavSections } from "@/lib/nav/enrichNav";
+import { rememberTrackIndex } from "@/lib/nav/trackIndexCache";
 import type { NavGroup, NavRootSection } from "@/lib/nav";
 import { loadTrackSearchIndex, localeFromPath } from "../utils/searchCorpus";
 
-function trackIdFromPathname(pathname: string): TrackId | null {
-  const segments = pathname.split("/").filter(Boolean);
-  const offset = segments[0] && isLocale(segments[0]) ? 1 : 0;
-  const trackSlug = segments[offset];
-  return trackSlug && isTrackId(trackSlug) ? trackSlug : null;
-}
-
-function rememberTrack(
-  loadedByTrack: ReadonlyMap<string, readonly NavGroup[]>,
-  trackId: TrackId,
-  groups: readonly NavGroup[],
-): ReadonlyMap<string, readonly NavGroup[]> {
-  if (loadedByTrack.has(trackId)) {
-    return loadedByTrack;
+function trackIdsIn(structure: readonly NavRootSection[]): TrackId[] {
+  const ids: TrackId[] = [];
+  const seen = new Set<string>();
+  for (const section of structure) {
+    for (const group of section.groups) {
+      if (seen.has(group.id)) {
+        continue;
+      }
+      seen.add(group.id);
+      ids.push(group.id);
+    }
   }
-  const next = new Map(loadedByTrack);
-  next.set(trackId, groups);
-  return next;
+  return ids;
 }
 
 export function useEnrichedNavSections(
   structure: readonly NavRootSection[],
+  preloadTracks: boolean,
 ): readonly NavRootSection[] {
   const pathname = usePathname() ?? "/";
   const locale = localeFromPath(pathname);
-  const activeTrackId = trackIdFromPathname(pathname);
   const [loadedByTrack, setLoadedByTrack] = useState<
     ReadonlyMap<string, readonly NavGroup[]>
   >(() => new Map());
 
   useEffect(() => {
-    if (!activeTrackId || loadedByTrack.has(activeTrackId)) {
+    if (!preloadTracks) {
       return;
     }
     let cancelled = false;
-    void loadTrackSearchIndex(locale, activeTrackId)
-      .then((groups) => {
-        if (cancelled) {
-          return;
+    const trackIds = trackIdsIn(structure);
+    void Promise.all(
+      trackIds.map((trackId) =>
+        loadTrackSearchIndex(locale, trackId).then(
+          (groups) => ({ trackId, groups }),
+          () => null,
+        ),
+      ),
+    ).then((results) => {
+      if (cancelled) {
+        return;
+      }
+      setLoadedByTrack((current) => {
+        let next = current;
+        for (const result of results) {
+          if (!result) {
+            continue;
+          }
+          next = rememberTrackIndex(
+            next,
+            locale,
+            result.trackId,
+            result.groups,
+          );
         }
-        setLoadedByTrack((current) =>
-          rememberTrack(current, activeTrackId, groups),
-        );
-      })
-      .catch(() => undefined);
+        return next;
+      });
+    });
     return () => {
       cancelled = true;
     };
-  }, [activeTrackId, locale, loadedByTrack]);
-
-  useEffect(() => {
-    const preload = () => {
-      const seen = loadedByTrack;
-      for (const section of structure) {
-        for (const group of section.groups) {
-          const trackId = group.id;
-          if (seen.has(trackId)) {
-            continue;
-          }
-          void loadTrackSearchIndex(locale, trackId)
-            .then((groups) => {
-              setLoadedByTrack((current) =>
-                rememberTrack(current, trackId, groups),
-              );
-            })
-            .catch(() => undefined);
-        }
-      }
-    };
-
-    const idle = window.requestIdleCallback?.bind(window);
-    if (!idle) {
-      preload();
-      return;
-    }
-    const handle = idle(preload);
-    return () => {
-      window.cancelIdleCallback?.(handle);
-    };
-  }, [structure, locale, loadedByTrack]);
+  }, [preloadTracks, structure, locale]);
 
   return useMemo(
-    () => enrichNavSections(structure, loadedByTrack),
-    [structure, loadedByTrack],
+    () => enrichNavSections(structure, loadedByTrack, locale),
+    [structure, loadedByTrack, locale],
   );
 }

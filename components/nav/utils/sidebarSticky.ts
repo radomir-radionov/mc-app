@@ -177,6 +177,7 @@ export function measureOpenTrackGuideSpan(
   nav: Element,
   _vars: StickyVars,
 ): number | undefined {
+  void _vars;
   const scopeLi = nav.querySelector("li[data-nav-sticky-scope]");
   const trackHeader = scopeLi?.querySelector<HTMLElement>('[data-nav="track"]');
   if (!trackHeader || !(nav instanceof HTMLElement)) {

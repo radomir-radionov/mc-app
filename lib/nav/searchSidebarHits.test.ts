@@ -3,7 +3,11 @@ import test from "node:test";
 import { handbookNavSections } from "./handbook";
 import { navGroupsForRootSection } from "./sections";
 import { navTopics } from "./search";
-import { collectGroupSearchHits } from "./searchSidebarHits";
+import {
+  collectGroupSearchHits,
+  collectVisibleGroupSearchHits,
+  SIDEBAR_SEARCH_HIT_CAP,
+} from "./searchSidebarHits";
 import type { NavGroup } from "./types";
 
 const frontendGroup: NavGroup = {
@@ -187,6 +191,69 @@ test("title-shaped lone concept matches stay searchable across conspect", () => 
   }
 
   assert.deepEqual(missing, []);
+});
+
+test("collectVisibleGroupSearchHits caps a track and counts the rest", () => {
+  const concepts = Array.from({ length: SIDEBAR_SEARCH_HIT_CAP + 5 }, (_, index) => ({
+    id: `alpha-${index}`,
+    title: `Alpha ${index}`,
+  }));
+  const group: NavGroup = {
+    id: "frontend",
+    title: "Frontend",
+    href: "/en/frontend",
+    entries: [
+      {
+        kind: "topic",
+        topic: {
+          slug: "alpha",
+          href: "/en/frontend/alpha",
+          title: "Reference",
+          blurb: "",
+          concepts,
+        },
+      },
+    ],
+  };
+
+  const visible = collectVisibleGroupSearchHits(group, "alpha", "titles");
+  assert.equal(visible.hits.length, SIDEBAR_SEARCH_HIT_CAP);
+  assert.equal(visible.remaining, 5);
+  assert.equal(
+    collectGroupSearchHits(group, "alpha", "titles").length,
+    SIDEBAR_SEARCH_HIT_CAP + 5,
+  );
+});
+
+test("collectGroupSearchHits matches note bodies from the search index", () => {
+  const group: NavGroup = {
+    id: "frontend",
+    title: "Frontend",
+    href: "/en/frontend",
+    entries: [
+      {
+        kind: "topic",
+        topic: {
+          slug: "loops",
+          href: "/en/frontend/loops",
+          title: "Timers",
+          blurb: "",
+          concepts: [
+            {
+              id: "event-loop",
+              title: "Scheduling",
+              searchText: "the event loop queues microtasks",
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const hits = collectGroupSearchHits(group, "microtasks", "notes");
+  assert.equal(hits.length, 1);
+  assert.equal(hits[0]?.concept.id, "event-loop");
+  assert.match(hits[0]?.snippet ?? "", /microtasks/);
 });
 
 test("collectGroupSearchHits searches nested module topics", () => {

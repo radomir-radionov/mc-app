@@ -4,4 +4,5 @@ export {
   SearchQueryContext,
   useSearchMode,
   useSearchQuery,
+  useSearchQueryEdited,
 } from "./context/SearchQueryContext";

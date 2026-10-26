@@ -197,6 +197,10 @@ body {
   }
 }
 
+html[data-concept-hash] nav.concept-list {
+  visibility: hidden;
+}
+
 .concept-body {
   display: flex;
   flex-direction: column;

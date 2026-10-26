@@ -5,6 +5,13 @@ import {
   matchesQuery,
 } from "./search";
 import { isRedundantTopicConceptTitle, sameTitle } from "./navUtils";
+import {
+  searchIndexFor,
+  topicSearchConcepts,
+  trigramBodyHits,
+  type HandbookSearchIndex,
+  type IndexedConceptMatch,
+} from "./searchIndex";
 import { navSubjectClusters } from "./subjectClusters";
 import type {
   NavCluster,
@@ -16,6 +23,10 @@ import type {
   SearchMode,
 } from "./types";
 
+export const SIDEBAR_SEARCH_HIT_CAP = 40;
+
+const groupIndexCache = new WeakMap<NavGroup, HandbookSearchIndex>();
+
 export type SearchSidebarHit = {
   readonly href: string;
   readonly concept: NavConcept;
@@ -25,25 +36,55 @@ export type SearchSidebarHit = {
   readonly snippet: string | null;
 };
 
+function indexForGroup(group: NavGroup): HandbookSearchIndex {
+  const cached = groupIndexCache.get(group);
+  if (cached) {
+    return cached;
+  }
+  const index = searchIndexFor([group]);
+  groupIndexCache.set(group, index);
+  return index;
+}
+
+function fallbackMatches(
+  topic: NavTopic,
+  needle: string,
+  mode: SearchMode,
+): readonly IndexedConceptMatch[] {
+  const matches: IndexedConceptMatch[] = [];
+  for (const concept of topic.concepts) {
+    if (!conceptMatchesQuery(concept, needle, mode)) {
+      continue;
+    }
+    const titleMatch =
+      matchesQuery(concept.title, needle) ||
+      matchesQuery(concept.titleSearchText ?? "", needle);
+    matches.push({
+      concept,
+      bodyOnly: mode === "notes" && !titleMatch,
+    });
+  }
+  return matches;
+}
+
 function visibleConcepts(
   topic: NavTopic,
-  query: string,
+  needle: string,
   mode: SearchMode,
-): readonly NavConcept[] {
-  const needle = query.trim().toLowerCase();
+  index: HandbookSearchIndex,
+  bodyHits: Set<number> | null,
+): readonly IndexedConceptMatch[] {
   const matched =
     needle.length === 0
-      ? topic.concepts
-      : topic.concepts.filter((concept) =>
-          conceptMatchesQuery(concept, needle, mode),
-        );
+      ? topic.concepts.map(
+          (concept): IndexedConceptMatch => ({ concept, bodyOnly: false }),
+        )
+      : index.topicOf.has(topic)
+        ? topicSearchConcepts(index, topic, needle, mode, bodyHits)
+        : fallbackMatches(topic, needle, mode);
   const only = matched.length === 1 ? matched[0] : undefined;
-  if (only && isRedundantTopicConceptTitle(topic.title, only.title)) {
-    if (
-      mode === "notes" &&
-      needle.length > 0 &&
-      conceptBodySnippet(only, query, mode)
-    ) {
+  if (only && isRedundantTopicConceptTitle(topic.title, only.concept.title)) {
+    if (mode === "notes" && needle.length > 0 && only.bodyOnly) {
       return matched;
     }
     if (
@@ -72,100 +113,201 @@ function contextLabel(parts: readonly string[]): string {
   return labels.join(" · ");
 }
 
+type PendingHit = {
+  readonly href: string;
+  readonly concept: NavConcept;
+  readonly topic: NavTopic;
+  readonly topicHref: string;
+  readonly context: string;
+  readonly bodyOnly: boolean;
+};
+
+type HitBudget = {
+  readonly cap: number;
+  remaining: number;
+};
+
+function matchKept(
+  topic: NavTopic,
+  match: IndexedConceptMatch,
+  needle: string,
+): boolean {
+  return (
+    match.bodyOnly ||
+    matchesQuery(topic.title, needle) ||
+    matchesQuery(topic.blurb, needle) ||
+    matchesQuery(match.concept.title, needle) ||
+    matchesQuery(match.concept.titleSearchText ?? "", needle)
+  );
+}
+
+function pushMatch(
+  hits: PendingHit[],
+  budget: HitBudget,
+  topic: NavTopic,
+  match: IndexedConceptMatch,
+  context: string,
+  needle: string,
+) {
+  if (!matchKept(topic, match, needle)) {
+    return;
+  }
+  if (hits.length >= budget.cap) {
+    budget.remaining += 1;
+    return;
+  }
+  hits.push({
+    href: conceptHref(topic.href, match.concept.id),
+    concept: match.concept,
+    topic,
+    topicHref: topic.href,
+    context,
+    bodyOnly: match.bodyOnly,
+  });
+}
+
 function pushTopicHits(
-  hits: SearchSidebarHit[],
+  hits: PendingHit[],
+  budget: HitBudget,
   topic: NavTopic,
   contextParts: readonly string[],
-  query: string,
+  needle: string,
   mode: SearchMode,
+  index: HandbookSearchIndex,
+  bodyHits: Set<number> | null,
 ) {
-  const needle = query.trim().toLowerCase();
-  let concepts = visibleConcepts(topic, query, mode);
+  let concepts = visibleConcepts(topic, needle, mode, index, bodyHits);
   if (
     concepts.length === 0 &&
     needle.length > 0 &&
     (matchesQuery(topic.title, needle) || matchesQuery(topic.blurb, needle))
   ) {
     const first = topic.concepts[0];
-    concepts = first ? [first] : [];
+    concepts = first ? [{ concept: first, bodyOnly: false }] : [];
   }
   const context = contextLabel(contextParts);
-  for (const concept of concepts) {
-    hits.push({
-      href: conceptHref(topic.href, concept.id),
-      concept,
-      topic,
-      topicHref: topic.href,
-      context,
-      snippet: conceptBodySnippet(concept, query, mode),
-    });
+  for (const match of concepts) {
+    pushMatch(hits, budget, topic, match, context, needle);
   }
   for (const nested of topic.nestedTopics ?? []) {
     pushTopicHits(
       hits,
+      budget,
       nested,
       [...contextParts, topic.title, nested.title],
-      query,
+      needle,
       mode,
+      index,
+      bodyHits,
     );
   }
 }
 
 function collectClusterHits(
-  hits: SearchSidebarHit[],
+  hits: PendingHit[],
+  budget: HitBudget,
   cluster: NavCluster,
   contextParts: readonly string[],
-  query: string,
+  needle: string,
   mode: SearchMode,
+  index: HandbookSearchIndex,
+  bodyHits: Set<number> | null,
 ) {
   const onlyTopic = cluster.topics.length === 1 ? cluster.topics[0] : null;
   if (onlyTopic && sameTitle(cluster.title, onlyTopic.title)) {
-    pushTopicHits(hits, onlyTopic, contextParts, query, mode);
+    pushTopicHits(
+      hits,
+      budget,
+      onlyTopic,
+      contextParts,
+      needle,
+      mode,
+      index,
+      bodyHits,
+    );
     return;
   }
 
   for (const topic of cluster.topics) {
     pushTopicHits(
       hits,
+      budget,
       topic,
       [...contextParts, cluster.title, topic.title],
-      query,
+      needle,
       mode,
+      index,
+      bodyHits,
     );
   }
 }
 
 function collectSubjectHits(
-  hits: SearchSidebarHit[],
+  hits: PendingHit[],
+  budget: HitBudget,
   subject: NavSubject,
-  query: string,
+  needle: string,
   mode: SearchMode,
+  index: HandbookSearchIndex,
+  bodyHits: Set<number> | null,
 ) {
   for (const cluster of navSubjectClusters(subject)) {
-    collectClusterHits(hits, cluster, [subject.title], query, mode);
+    collectClusterHits(
+      hits,
+      budget,
+      cluster,
+      [subject.title],
+      needle,
+      mode,
+      index,
+      bodyHits,
+    );
   }
 }
 
 function collectEntryHits(
-  hits: SearchSidebarHit[],
+  hits: PendingHit[],
+  budget: HitBudget,
   entry: NavEntry,
-  query: string,
+  needle: string,
   mode: SearchMode,
+  index: HandbookSearchIndex,
+  bodyHits: Set<number> | null,
 ) {
   switch (entry.kind) {
     case "topic":
-      pushTopicHits(hits, entry.topic, [entry.topic.title], query, mode);
+      pushTopicHits(
+        hits,
+        budget,
+        entry.topic,
+        [entry.topic.title],
+        needle,
+        mode,
+        index,
+        bodyHits,
+      );
       return;
     case "subject":
-      collectSubjectHits(hits, entry.subject, query, mode);
+      collectSubjectHits(
+        hits,
+        budget,
+        entry.subject,
+        needle,
+        mode,
+        index,
+        bodyHits,
+      );
       return;
     case "cluster":
       collectClusterHits(
         hits,
+        budget,
         entry.cluster,
         [entry.cluster.title],
-        query,
+        needle,
         mode,
+        index,
+        bodyHits,
       );
       return;
     default: {
@@ -175,33 +317,78 @@ function collectEntryHits(
   }
 }
 
+export type CappedSearchHits = {
+  readonly hits: readonly SearchSidebarHit[];
+  readonly remaining: number;
+};
+
+export function collectVisibleGroupSearchHits(
+  group: NavGroup,
+  query: string,
+  mode: SearchMode,
+  cap = SIDEBAR_SEARCH_HIT_CAP,
+): CappedSearchHits {
+  const needle = query.trim().toLowerCase();
+  if (needle.length === 0) {
+    return { hits: [], remaining: 0 };
+  }
+
+  const index = indexForGroup(group);
+  const bodyHits = mode === "notes" ? trigramBodyHits(index, needle) : null;
+  const pending: PendingHit[] = [];
+  const budget: HitBudget = { cap, remaining: 0 };
+  if (group.leafTopic) {
+    pushTopicHits(
+      pending,
+      budget,
+      group.leafTopic,
+      [],
+      needle,
+      mode,
+      index,
+      bodyHits,
+    );
+  }
+  if (group.hubTopic) {
+    pushTopicHits(
+      pending,
+      budget,
+      group.hubTopic,
+      [],
+      needle,
+      mode,
+      index,
+      bodyHits,
+    );
+  }
+  for (const entry of group.entries) {
+    collectEntryHits(pending, budget, entry, needle, mode, index, bodyHits);
+  }
+
+  return {
+    hits: pending.map((hit) => ({
+      href: hit.href,
+      concept: hit.concept,
+      topic: hit.topic,
+      topicHref: hit.topicHref,
+      context: hit.context,
+      snippet: hit.bodyOnly
+        ? conceptBodySnippet(hit.concept, query, mode)
+        : null,
+    })),
+    remaining: budget.remaining,
+  };
+}
+
 export function collectGroupSearchHits(
   group: NavGroup,
   query: string,
   mode: SearchMode,
 ): readonly SearchSidebarHit[] {
-  const needle = query.trim().toLowerCase();
-  if (needle.length === 0) {
-    return [];
-  }
-
-  const hits: SearchSidebarHit[] = [];
-  if (group.leafTopic) {
-    pushTopicHits(hits, group.leafTopic, [], query, mode);
-  }
-  if (group.hubTopic) {
-    pushTopicHits(hits, group.hubTopic, [], query, mode);
-  }
-  for (const entry of group.entries) {
-    collectEntryHits(hits, entry, query, mode);
-  }
-
-  return hits.filter(
-    (hit) =>
-      matchesQuery(hit.topic.title, needle) ||
-      matchesQuery(hit.topic.blurb, needle) ||
-      matchesQuery(hit.concept.title, needle) ||
-      matchesQuery(hit.concept.titleSearchText ?? "", needle) ||
-      hit.snippet !== null,
-  );
+  return collectVisibleGroupSearchHits(
+    group,
+    query,
+    mode,
+    Number.POSITIVE_INFINITY,
+  ).hits;
 }

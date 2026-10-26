@@ -1,12 +1,10 @@
 import {
   isTypesHubSectionSlug,
-  isTypesHubSlug,
   typesHubSectionGroup,
   TYPES_HUB_SLUG,
 } from "@/lib/catalog/typesHub";
 import {
   isUtilityTypesHubSectionSlug,
-  isUtilityTypesHubSlug,
   UTILITY_TYPES_HUB_SLUG,
 } from "@/lib/catalog/utilityTypesHub";
 import {
@@ -298,6 +296,7 @@ function utilityTypesHubSectionTrail(
   group: NavGroup,
   _cluster: NavCluster,
 ): readonly Crumb[] | undefined {
+  void _cluster;
   if (!utilityHub) {
     return undefined;
   }

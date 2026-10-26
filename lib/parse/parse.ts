@@ -141,13 +141,19 @@ export function parseTopicOutline(
     ? extractInterviewAnchorTitles(options.anchorMarkdown)
     : undefined;
   const usedIds = new Set<string>();
+  const hideAnswers = options.hideAnswers ?? false;
   const outline: ConceptOutline[] = regular.map((block) => ({
     id: uniqueId(slugify(block.title), usedIds),
     title: block.title,
-    searchText: conceptSearchText(block.body),
+    searchText: outlineSearchText(block.body, hideAnswers),
     ...(block.group ? { group: block.group } : {}),
   }));
-  for (const item of interviewOutlineItems(interview, usedIds, anchorTitles)) {
+  for (const item of interviewOutlineItems(
+    interview,
+    usedIds,
+    anchorTitles,
+    hideAnswers,
+  )) {
     outline.push(item);
   }
   return outline;
@@ -285,6 +291,7 @@ async function collectConcepts(
     usedIds,
     renderInterviewConcept,
     anchorTitles,
+    options.hideAnswers ?? false,
   );
   const [renderedRegular, renderedInterview] = await Promise.all([
     Promise.all(regularConcepts),
@@ -426,7 +433,8 @@ function warnInterviewAnchorMismatch(
 function interviewOutlineItems(
   blocks: readonly ConceptBlock[],
   usedIds: Set<string>,
-  anchorTitles?: readonly string[],
+  anchorTitles: readonly string[] | undefined,
+  hideAnswers: boolean,
 ): ConceptOutline[] {
   const ordered = orderedInterviewBlocks(blocks);
   if (anchorTitles) {
@@ -445,7 +453,7 @@ function interviewOutlineItems(
         anchorTitle,
         block.title,
       ),
-      searchText: conceptSearchText(block.body),
+      searchText: outlineSearchText(block.body, hideAnswers),
       interviewSection,
       ...(block.group ? { group: block.group } : {}),
     };
@@ -456,7 +464,8 @@ function interviewConceptItems(
   blocks: readonly ConceptBlock[],
   usedIds: Set<string>,
   render: (block: ConceptBlock) => Promise<string>,
-  anchorTitles?: readonly string[],
+  anchorTitles: readonly string[] | undefined,
+  hideAnswers: boolean,
 ): Promise<Concept[]> {
   const ordered = orderedInterviewBlocks(blocks);
   if (anchorTitles) {
@@ -468,7 +477,7 @@ function interviewConceptItems(
     const idSource = anchorTitle ?? block.title;
     const id = uniqueId(slugify(idSource), usedIds);
     const title = cleanInterviewTitle(block.title, interviewSection);
-    const searchText = conceptSearchText(block.body);
+    const searchText = outlineSearchText(block.body, hideAnswers);
     return render(block).then(
       (html): Concept => ({
         id,
@@ -918,6 +927,10 @@ function stripMd(value: string): string {
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function outlineSearchText(body: string, hideAnswers: boolean): string {
+  return conceptSearchText(hideAnswers ? stripAnswerSections(body) : body);
 }
 
 function conceptSearchText(body: string): string {

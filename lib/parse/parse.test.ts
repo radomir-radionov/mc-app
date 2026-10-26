@@ -170,6 +170,43 @@ test("parseTopicOutline uses English anchors for Russian interview titles", () =
   assert.match(outline[0].titleSearchText ?? "", /What does HTML stand for/);
 });
 
+test("parseTopicOutline omits hidden answers from search text", () => {
+  const markdown = `
+<details>
+  <summary>Strengths</summary>
+
+**Definition:** What you are good at.
+
+**Answer:**
+
+My greatest strengths are problem-solving at a private company.
+</details>
+
+## Interview Practice
+
+<details>
+<summary>Q1. Tell me more</summary>
+
+**Definition:** A follow-up.
+
+**Answer:**
+
+Secret interview answer.
+</details>
+`;
+
+  const hidden = parseTopicOutline(markdown, "en", { hideAnswers: true });
+  assert.equal(hidden.length, 2);
+  assert.match(hidden[0]?.searchText ?? "", /good at/);
+  assert.doesNotMatch(hidden[0]?.searchText ?? "", /problem-solving/);
+  assert.match(hidden[1]?.searchText ?? "", /follow-up/);
+  assert.doesNotMatch(hidden[1]?.searchText ?? "", /Secret interview answer/);
+
+  const shown = parseTopicOutline(markdown, "en");
+  assert.match(shown[0]?.searchText ?? "", /problem-solving/);
+  assert.match(shown[1]?.searchText ?? "", /Secret interview answer/);
+});
+
 test("parseTopicOutline keeps content after horizontal rules in the body", () => {
   const outline = parseTopicOutline(`
 # Topic

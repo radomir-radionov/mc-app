@@ -1,5 +1,4 @@
 import { watch } from "node:fs";
-import path from "node:path";
 import { DEV_RESOURCES_REFRESH_MESSAGE } from "@/lib/dev/shared";
 import { resourcesRoot } from "@/lib/resourcesRoot";
 import { clearTopicParseCache } from "@/lib/parse/load";

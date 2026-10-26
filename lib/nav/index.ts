@@ -24,8 +24,12 @@ export {
   splitHref,
   topicMatches,
 } from "./search";
-export { collectGroupSearchHits } from "./searchSidebarHits";
-export type { SearchSidebarHit } from "./searchSidebarHits";
+export {
+  collectGroupSearchHits,
+  collectVisibleGroupSearchHits,
+  SIDEBAR_SEARCH_HIT_CAP,
+} from "./searchSidebarHits";
+export type { CappedSearchHits, SearchSidebarHit } from "./searchSidebarHits";
 export { navSubjectClusters } from "./subjectClusters";
 export {
   bookmarkHref,

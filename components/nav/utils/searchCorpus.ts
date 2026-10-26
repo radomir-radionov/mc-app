@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { SEARCH_INDEX_STATIC_BASE } from "@/constants";
-import { TRACKS, type TrackId } from "@/lib/catalog";
+import type { TrackId } from "@/lib/catalog";
 import { DEFAULT_LOCALE, isLocale } from "@/lib/i18n/locales";
+import { loadSearchCorpusTracks } from "@/lib/nav/searchCorpusLoad";
+import { trackIndexCacheKey } from "@/lib/nav/trackIndexCache";
 import type { NavGroup } from "@/lib/nav";
 
 const trackCache = new Map<string, readonly NavGroup[]>();
@@ -13,7 +15,7 @@ const corpusCache = new Map<string, readonly NavGroup[]>();
 const corpusInflight = new Map<string, Promise<readonly NavGroup[]>>();
 
 function cacheKey(locale: string, trackId: TrackId): string {
-  return `${locale}\0${trackId}`;
+  return trackIndexCacheKey(locale, trackId);
 }
 
 export function localeFromPath(pathname: string): string {
@@ -67,11 +69,8 @@ export function loadSearchCorpus(locale: string): Promise<readonly NavGroup[]> {
   if (pending) {
     return pending;
   }
-  const request = Promise.all(
-    TRACKS.map((track) => loadTrackSearchIndex(locale, track.id)),
-  )
-    .then((chunks) => {
-      const groups = chunks.flat();
+  const request = loadSearchCorpusTracks(locale, loadTrackSearchIndex)
+    .then((groups) => {
       corpusCache.set(locale, groups);
       corpusInflight.delete(locale);
       return groups;
@@ -110,7 +109,7 @@ export function useSearchCorpus(enabled: boolean): readonly NavGroup[] | null {
       })
       .catch(() => {
         if (!cancelled) {
-          setGroups(null);
+          setGroups([]);
         }
       });
     return () => {

@@ -3,6 +3,8 @@
 import { memo } from "react";
 import Link from "next/link";
 import { HighlightedText } from "@/components/search";
+import { chromeFor } from "@/lib/i18n/chrome";
+import { localeFromPathname } from "@/lib/i18n/paths";
 import { CHROME, splitHref, type SearchSidebarHit } from "@/lib/nav";
 import {
   closeNavSoon,
@@ -13,14 +15,24 @@ import { followHandbookHref, setHashOnPath } from "../utils/hash";
 
 export const SearchHitList = memo(function SearchHitList({
   hits,
+  remaining = 0,
 }: {
   hits: readonly SearchSidebarHit[];
+  remaining?: number;
 }) {
   const { query, pathname, first, goToPath, onNavigate } = useSidebarChrome();
 
   if (hits.length === 0) {
     return null;
   }
+
+  const moreLabel =
+    remaining > 0
+      ? chromeFor(localeFromPathname(pathname)).searchMoreHits.replace(
+          "{count}",
+          String(remaining),
+        )
+      : "";
 
   return (
     <>
@@ -38,7 +50,7 @@ export const SearchHitList = memo(function SearchHitList({
               data-concept-id={hit.concept.id}
               data-search-hit={isFirstHit ? "true" : undefined}
               data-search-in={hit.snippet ? "notes" : undefined}
-              onClick={(event) => {
+              onNavigate={(event) => {
                 event.preventDefault();
                 if (onCurrentTopic) {
                   setHashOnPath(pathname, hit.concept.id);
@@ -69,6 +81,11 @@ export const SearchHitList = memo(function SearchHitList({
           </li>
         );
       })}
+      {remaining > 0 ? (
+        <li className="px-2 py-1 text-xs text-zinc-500 dark:text-zinc-400">
+          {moreLabel}
+        </li>
+      ) : null}
     </>
   );
 });
